@@ -1,5 +1,6 @@
 package vut.fekt.archive.blockchain;
 
+import java.io.Serializable;
 import java.security.*;
 import java.util.Base64;
 
@@ -8,7 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * Trieda slúžiaca na kryptografické objekty s použitým Java secure pre jedoduhšiu prácu
  */
-public class Crypto {
+public class Crypto implements Serializable {
 
     //generovanie klučov
     public KeyPair generateKeyPair() throws Exception {
@@ -44,10 +45,13 @@ public class Crypto {
     //hashovanie bloku
     public String blockHash(Block block){
         String s = block.getPreviousHash()+
-                block.getTransaction().getSourcePublicKey().toString()+
-                block.getTransaction().getDestinationPublicKey().toString()+
-                block.getTransaction().getSum()+
-                block.getVoteId()+
+//                block.getTransaction().getSourcePublicKey().toString()+
+//                block.getTransaction().getDestinationPublicKey().toString()+
+//                block.getTransaction().getSum()+
+                block.getFilehash()+
+                block.getFilepath()+
+                block.getMetapath()+
+                block.getBlockId()+
                 block.getTimeStamp();
         MessageDigest digest = null;
         try {

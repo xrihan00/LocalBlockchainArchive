@@ -10,7 +10,9 @@ public class Blockchain implements Serializable {
     LinkedList<Block> blocks;           // prepojený list blokov
     Crypto crypto= new Crypto();
 
-    public Blockchain(){}
+    public Blockchain(){
+        this.blocks = new LinkedList<>();
+    }
 
     public Blockchain(PublicKey adminKey, int numberOfVoters){
         this.blocks = new LinkedList<>();
@@ -18,6 +20,9 @@ public class Blockchain implements Serializable {
     }
 
     public String getLastHash(){
+        if(blocks==null || blocks.isEmpty()){
+            return "FIRST BLOCK";
+        }
         return crypto.blockHash(blocks.getLast());
     }       // získaní hashe posledního bloku
 

@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Random;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,6 +26,7 @@ import org.xml.sax.SAXException;
 public class ArchiveDocument {
     File metadata;
     File content;
+    FileOutputStream docFile;
     Path docFolder;
 
     String author;
@@ -33,7 +35,7 @@ public class ArchiveDocument {
     String version;
     String timestamp;
 
-    public ArchiveDocument(File content, String archiveFolder, String author, String docName, String version) throws IOException, TransformerException, ParserConfigurationException, SAXException {
+    public ArchiveDocument(File content, String archiveFolder, String author, String docName, String version) throws Exception {
         this.author = author;
         this.docName = docName;
         this.version = version;
@@ -45,13 +47,13 @@ public class ArchiveDocument {
         createDocFiles(content);
     }
 
-    private void createDocFiles(File content) throws IOException, ParserConfigurationException, TransformerException, SAXException {
-        FileOutputStream docFile = new FileOutputStream(docFolder+"/"+content.getName());
+    private void createDocFiles(File content) throws IOException, ParserConfigurationException, TransformerException, NoSuchAlgorithmException {
+        docFile = new FileOutputStream(docFolder+"/"+content.getName());
         Files.copy(content.getAbsoluteFile().toPath(), docFile);
         createMetadata();
     }
 
-    private void createMetadata() throws ParserConfigurationException, IOException, SAXException, TransformerException {
+    private void createMetadata() throws ParserConfigurationException, IOException, TransformerException, NoSuchAlgorithmException {
         metadata = new File(docFolder+"/"+id+".xml");
         DocumentBuilderFactory dbFactory =
         DocumentBuilderFactory.newInstance();
@@ -66,6 +68,7 @@ public class ArchiveDocument {
         root.setAttribute("version", version);
         root.setAttribute("added", timestamp);
         root.setAttribute("id", String.valueOf(id));
+        root.setAttribute("hash",FileUtils.getFileHash(content.getAbsolutePath()));
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();

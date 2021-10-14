@@ -1,27 +1,50 @@
 package vut.fekt.archive.app;
 
 import org.junit.Test;
-import org.xml.sax.SAXException;
 import vut.fekt.archive.Archive;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+
+import static org.junit.Assert.assertTrue;
 
 public class Application {
+    public static String archivPath = "D:/Archiv/";
+
 
     @Test
     public void archiveTest(){
         try {
-            Archive archive = new Archive("Archiv 1","D:/Archiv");
-            File content = new File("D:/new.tif");
-            archive.addDocument(content, "User","Test Document", "1");
+            Archive archive = new Archive("Archiv 1",archivPath);
 
-        } catch (IOException | ParserConfigurationException | TransformerException | SAXException e) {
+            String testpath = archivPath+"TestFiles/";
+            ArrayList<String> files = new ArrayList();
+            files.add(testpath+"test1.docx");
+            files.add(testpath+"test2.xlsx");
+            files.add(testpath+"test3.txt");
+            files.add(testpath+"test4.pdf");
+            files.add(testpath+"test5.jpg");
+            for (int i = 0; i < 5; i++) {
+                File content = new File(files.get(i));
+                archive.addDocument(content, "User","Test Document " + (i+1), "1");
+            }
+            archive.saveArchiveBlockchain();
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
+    }
+
+    @Test
+    public void loadBlockchainTest() throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
+        Archive archive = new Archive("Archiv 1",archivPath);
+        archive.loadArchiveBlockchain(new File(archivPath + "Archiv 1serializedBlockchain.txt"));
+        archive.saveArchiveBlockchain();
+        Boolean valid =archive.validateBlockchain();
+        assertTrue(valid);
     }
 
 
