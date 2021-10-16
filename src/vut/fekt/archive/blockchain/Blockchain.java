@@ -14,53 +14,21 @@ public class Blockchain implements Serializable {
         this.blocks = new LinkedList<>();
     }
 
-    public Blockchain(PublicKey adminKey, int numberOfVoters){
-        this.blocks = new LinkedList<>();
-        firstBlock(adminKey, numberOfVoters);
-    }
 
-    public String getLastHash(){
+  public String getLastHash(){
         if(blocks==null || blocks.isEmpty()){
             return "FIRST BLOCK";
         }
         return crypto.blockHash(blocks.getLast());
     }       // získaní hashe posledního bloku
 
-    private void firstBlock(PublicKey adminKey, int voters){            //vytvorenie inicializačného bloku - admin si sám sobě pošle tolik hlasů kolik je voličů
-        Transaction tr = new Transaction(adminKey,adminKey, voters);
-        Block block = new Block("0",tr,randomVoteId());
-        blocks.add(block);
-    }
 
     public void addBlock(Block block){                  // pridávanie blokov na blockchain
         block.setPreviousHash(getLastHash());
         blocks.add(block);
     }
 
-    public int getBalance(PublicKey pubkey){            //zjištění kolik má peněženka s daným veřejným klíčem na účtě hlasů
-        int balance = 0;
-        for (Block block:blocks) {
-            Transaction tr = block.getTransaction();
-            if(tr.getSourcePublicKey().equals(pubkey)){
-                balance -= tr.getSum();
-            }
-            if(tr.getDestinationPublicKey().equals(pubkey)){
-                balance += tr.getSum();
-            }
-        }
-        return balance;
-    }
-
-    public void firstTransaction(PublicKey adminKey, ArrayList<PublicKey> keys){    // prvá transakcia - poslání 1 hlasu všem vygenerovaným peněženkám
-        for (PublicKey key: keys) {
-            System.out.println(getBalance(adminKey));
-            Transaction tr = new Transaction(adminKey,key,1);
-            Block block = new Block(getLastHash(),tr, randomVoteId());
-            addBlock(block);
-        }
-    }
-
-    public int randomVoteId(){                      // náhodné zvolení ID hlasu
+    public int randomId(){                      // náhodné zvolení ID hlasu
         Random rng = new Random();
         return rng.nextInt(10000);
     }

@@ -1,22 +1,18 @@
 package vut.fekt.archive;
 
-import org.xml.sax.SAXException;
 import vut.fekt.archive.blockchain.Block;
 import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Archive implements Serializable {
+
     String name;
     Blockchain blockchain = new Blockchain();
     String archiveFolder;
@@ -25,13 +21,14 @@ public class Archive implements Serializable {
 
     public Archive(String name, String folder) throws IOException {
         this.archiveFolder = folder  + "/" + name;
+        this.name = name;
         new File(archiveFolder).mkdirs();
     }
 
     public void addDocument(File content, String author, String docName, String version) throws Exception {
         ArchiveDocument archDoc = new ArchiveDocument(content, archiveFolder, author, docName, version);
         documents.add(archDoc);
-        Block block = new Block(archDoc.content.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomVoteId());
+        Block block = new Block(archDoc.content.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId());
         blockchain.addBlock(block);
     }
 
@@ -74,4 +71,13 @@ public class Archive implements Serializable {
         }
         return result;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 }

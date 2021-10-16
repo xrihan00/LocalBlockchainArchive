@@ -12,20 +12,12 @@ public class Block implements Serializable {
 
 
     private String previousHash;
-    private Transaction transaction;
     private String filepath;
     private String metapath;
     private String filehash;
     private String timeStamp;
     private int blockId;
 
-    //jeden block blockchainu s informáciou o predchádzajucom hashi a o transakcii spolu s ID hlasu
-    public Block(String previousHash, Transaction transaction, int voteId) {
-        this.previousHash = previousHash;
-        this.transaction = transaction;
-        this.blockId = voteId;
-        this.timeStamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date()); //časové razítko hlasu
-    }
 
     //jeden block blockchainu s informáciou o predchádzajucom hashi a o transakcii spolu s ID hlasu
     public Block(String filepath, String metapath, int voteId) throws Exception {
@@ -44,12 +36,7 @@ public class Block implements Serializable {
         this.previousHash = previousHash;
     }
 
-    // getter transakcie
-    public Transaction getTransaction() {
-        return transaction;
-    }
-
-    // getter ID hlasu
+       // getter ID hlasu
     public int getBlockId() {
         return blockId;
     }
@@ -86,7 +73,6 @@ public class Block implements Serializable {
         this.filehash = filehash;
     }
 
-    // metóda toString na prevod pre výpis textu do informačného okna
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -95,10 +81,6 @@ public class Block implements Serializable {
         sb.append("\nCesta k souboru: " + filepath);
         sb.append("\nMetadata: " + metapath);
         sb.append("\nHash souboru: " + filehash);
-
-//        sb.append("\n\nVeřejný klíč zdroje: \n" + transaction.getSourcePublicKey());
-//        sb.append("\n\nVeřejný klíč cíle: \n" + transaction.getDestinationPublicKey());
-//        sb.append("\n\nSuma transakce: " + transaction.getSum());
         sb.append("\nČasové razítko: " + getTimeStamp());
         sb.append("\nID hlasu: " + getBlockId());
         return sb.toString();
