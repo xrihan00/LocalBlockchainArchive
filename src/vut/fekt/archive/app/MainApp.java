@@ -55,17 +55,27 @@ public class MainApp extends javax.swing.JFrame {
                 {
                     try {
                         archive = new Archive(fc.getSelectedFile().getName(),fc.getSelectedFile().getAbsolutePath());
-                        FileLabel.setText("Archive " + archive.getName() + " loaded!");
+                        FileLabel.setText("Archiv " + archive.getName() + " načten!");
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
                 }
                 // if the user cancelled the operation
                 else{
-                    FileLabel.setText("the user cancelled the operation");}
+                    FileLabel.setText("Uživatel zrušil operaci");}
 
             }
 
         });
+    }
+
+
+    public Archive getArchive() {
+        return archive;
+    }
+
+    public void setArchive(Archive archive) {
+        this.frame.archive = archive;
+        FileLabel.setText("Archiv " +archive.getName()+" vytvořen!");
     }
 }

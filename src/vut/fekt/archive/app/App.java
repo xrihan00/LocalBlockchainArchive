@@ -1,9 +1,12 @@
 package vut.fekt.archive.app;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
+import vut.fekt.archive.Archive;
+
+import java.io.IOException;
 
 public class App {
+    public static  Archive archive;
 
     public static void main(String[] args) {
 
@@ -14,6 +17,7 @@ public class App {
         mainApp.frame.setVisible(true);
 
         Thread t = new Thread(new Runnable() {
+            boolean archiveLoaded =false;
             @Override
             public void run() {
                 while(true){
@@ -22,8 +26,15 @@ public class App {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if(na.ok==true){
-                        mainApp.FileLabel.setText(na.getName()); //YES!!!!!!!!!!!!
+                    if(na.ok==true&&archiveLoaded==false){
+                        try {
+                            archive = new Archive(na.getName(),na.getDirectory());
+                            System.out.println("AAAAAA");
+                            mainApp.setArchive(archive);
+                            archiveLoaded = true;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
 
                 }
