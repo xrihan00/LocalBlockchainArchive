@@ -10,37 +10,40 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 
-public class MainApp {
+public class MainApp extends javax.swing.JFrame {
     private JPanel panel1;
-    private JButton newArchiveButton;
+    public JButton newArchiveButton;
     private JButton loadArchiveButton;
-    private JLabel FileLabel;
+    public JLabel FileLabel;
     private Archive archive;
+    public MainApp frame;
+    private NewArchive na;
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Local Archive");
+
+    public void initMainapp(){
+        frame = new MainApp(this.na);
         frame.pack();
-        frame.setVisible(true);
-        frame.setContentPane(new MainApp().panel1);
+        frame.setContentPane(this.panel1);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setBounds(100, 100, 500, 500);
         frame.setSize(500,500);
 
-
     }
 
-    public MainApp() {
+    public void hideFrame(){
+        this.setVisible(false);
+    }
+
+    public MainApp(NewArchive narch) {
+        this.na = narch;
         newArchiveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    archive = newArchiveFrame();
-                    FileLabel.setText(archive.getName());
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
+                na.frame.setVisible(true);
+
             }
         });
+;
         loadArchiveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -50,8 +53,6 @@ public class MainApp {
                 int r = fc.showOpenDialog(panel1);
                 if (r == JFileChooser.APPROVE_OPTION)
                 {
-                    // set the label to the path of the selected file
-
                     try {
                         archive = new Archive(fc.getSelectedFile().getName(),fc.getSelectedFile().getAbsolutePath());
                         FileLabel.setText("Archive " + archive.getName() + " loaded!");
@@ -66,24 +67,5 @@ public class MainApp {
             }
 
         });
-    }
-
-    public static Archive newArchiveFrame() throws IOException {
-        JFrame frame = new JFrame("New Archive");
-        frame.pack();
-        frame.setVisible(true);
-        NewArchive na = new NewArchive();
-        frame.setContentPane(na.panel);
-        frame.setBounds(100, 100, 300, 200);
-        frame.setSize(300,200);
-
-        String dir = na.setAndGetDirectory();
-        //String name;
-        //String dir;
-
-        Archive arch = new Archive(na.getName(),dir);
-      //  frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-        return arch;
-
     }
 }

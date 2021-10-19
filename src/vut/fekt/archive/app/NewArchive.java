@@ -8,12 +8,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 
-public class NewArchive {
+public class NewArchive extends JFrame {
     private JTextField archiveName;
     private JButton pickDirectoryButton;
     private JLabel directoryLabel;
     public JButton OKButton;
     public JPanel panel;
+    public NewArchive frame;
 
     public JButton getOKButton() {
         return OKButton;
@@ -29,23 +30,9 @@ public class NewArchive {
 
     public String name;
     public String directory;
+    public boolean ok = false;
 
     public NewArchive() {
-
-
-    }
-
-    public void pressOk(){
-        OKButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-
-    }
-
-    public String setAndGetDirectory(){
         pickDirectoryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -60,6 +47,33 @@ public class NewArchive {
                 }
             }
         });
+        OKButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ok = true;
+                frame.setVisible(false);
+            }
+        });
+
+
+    }
+
+    public void init(){
+        frame = new NewArchive();
+        frame.pack();
+
+        frame.setContentPane(this.panel);
+        frame.setBounds(100, 100, 300, 200);
+        frame.setSize(300,200);
+    }
+
+    public void pressOk(){
+
+
+    }
+
+    public String setAndGetDirectory(){
+
         return directory;
     }
 }
