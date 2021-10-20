@@ -26,7 +26,7 @@ import org.xml.sax.SAXException;
 public class ArchiveDocument {
     File metadata;
     File content;
-    FileOutputStream docFile;
+    File docuFile;
     Path docFolder;
 
     String author;
@@ -48,8 +48,9 @@ public class ArchiveDocument {
     }
 
     private void createDocFiles(File content) throws IOException, ParserConfigurationException, TransformerException, NoSuchAlgorithmException {
-        docFile = new FileOutputStream(docFolder+"/"+content.getName());
+        FileOutputStream docFile = new FileOutputStream(docFolder+"/"+content.getName());
         Files.copy(content.getAbsoluteFile().toPath(), docFile);
+        docuFile = new File(docFolder+"/"+content.getName());
         createMetadata();
     }
 

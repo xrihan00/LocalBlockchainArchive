@@ -15,13 +15,16 @@ public class MainApp extends javax.swing.JFrame {
     public JButton newArchiveButton;
     private JButton loadArchiveButton;
     public JLabel FileLabel;
+    private JButton addDocumentButton;
+    private JTextPane textPane1;
+    private JButton printBlockchainButton;
     private Archive archive;
     public MainApp frame;
     private NewArchive na;
-
+    private NewDocument nd;
 
     public void initMainapp(){
-        frame = new MainApp(this.na);
+        frame = new MainApp(this.na, this.nd);
         frame.pack();
         frame.setContentPane(this.panel1);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -34,8 +37,9 @@ public class MainApp extends javax.swing.JFrame {
         this.setVisible(false);
     }
 
-    public MainApp(NewArchive narch) {
+    public MainApp(NewArchive narch, NewDocument ndoc) {
         this.na = narch;
+        this.nd = ndoc;
         newArchiveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -66,6 +70,20 @@ public class MainApp extends javax.swing.JFrame {
 
             }
 
+        });
+        addDocumentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                nd.init();
+                nd.getFrame().setVisible(true);
+
+            }
+        });
+        printBlockchainButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                textPane1.setText(getArchive().getBlockchain().toString());
+            }
         });
     }
 

@@ -20,7 +20,7 @@ public class Archive implements Serializable {
     List<ArchiveDocument> documents = new ArrayList<>();
 
     public Archive(String name, String folder) throws IOException {
-        this.archiveFolder = folder  + "/" + name;
+        this.archiveFolder = folder;
         this.name = name;
         new File(archiveFolder).mkdirs();
     }
@@ -28,14 +28,14 @@ public class Archive implements Serializable {
     public void addDocument(File content, String author, String docName, String version) throws Exception {
         ArchiveDocument archDoc = new ArchiveDocument(content, archiveFolder, author, docName, version);
         documents.add(archDoc);
-        Block block = new Block(archDoc.content.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId());
+        Block block = new Block(archDoc.docuFile.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId());
         blockchain.addBlock(block);
     }
 
     public void saveArchiveBlockchain() throws IOException {
-        FileOutputStream fos = new FileOutputStream(new File("D:/Archiv/blockchain.txt"));
+        FileOutputStream fos = new FileOutputStream(new File(archiveFolder+"/blockchain.txt"));
         fos.write(blockchain.toString().getBytes(StandardCharsets.UTF_8));
-        fos = new FileOutputStream(new File(archiveFolder+"serializedBlockchain.txt"));
+        fos = new FileOutputStream(new File(archiveFolder+"/serializedBlockchain.txt"));
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(blockchain);
         oos.close();
@@ -78,6 +78,9 @@ public class Archive implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+    public Blockchain getBlockchain() {
+        return blockchain;
     }
 
 }
