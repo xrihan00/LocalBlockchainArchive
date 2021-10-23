@@ -5,9 +5,11 @@ import vut.fekt.archive.Archive;
 import javax.swing.*;
 
 import javax.swing.JFileChooser;
+import javax.swing.text.DefaultCaret;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 
 public class MainApp extends javax.swing.JFrame {
@@ -24,6 +26,7 @@ public class MainApp extends javax.swing.JFrame {
     private NewDocument nd;
 
     public void initMainapp(){
+
         frame = new MainApp(this.na, this.nd);
         frame.pack();
         frame.setContentPane(this.panel1);
@@ -38,11 +41,14 @@ public class MainApp extends javax.swing.JFrame {
     }
 
     public MainApp(NewArchive narch, NewDocument ndoc) {
+//        DefaultCaret caret = (DefaultCaret)textPane1.getCaret();
+//        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
         this.na = narch;
         this.nd = ndoc;
         newArchiveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 na.frame.setVisible(true);
 
             }
@@ -53,14 +59,15 @@ public class MainApp extends javax.swing.JFrame {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fc = new JFileChooser();
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
+                fc.setCurrentDirectory(new File("D:/Archiv/"));
                 int r = fc.showOpenDialog(panel1);
                 if (r == JFileChooser.APPROVE_OPTION)
                 {
                     try {
                         archive = new Archive(fc.getSelectedFile().getName(),fc.getSelectedFile().getAbsolutePath());
+                        archive.loadArchiveBlockchain(new File(archive.getArchiveFolder()+"/serializedBlockchain.txt"));
                         FileLabel.setText("Archiv " + archive.getName() + " načten!");
-                    } catch (IOException ioException) {
+                    } catch (IOException | ClassNotFoundException ioException) {
                         ioException.printStackTrace();
                     }
                 }
@@ -93,7 +100,8 @@ public class MainApp extends javax.swing.JFrame {
     }
 
     public void setArchive(Archive archive) {
-        this.frame.archive = archive;
+        this.archive = archive;
         FileLabel.setText("Archiv " +archive.getName()+" vytvořen!");
     }
+
 }

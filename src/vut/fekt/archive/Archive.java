@@ -30,6 +30,7 @@ public class Archive implements Serializable {
         documents.add(archDoc);
         Block block = new Block(archDoc.docuFile.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId());
         blockchain.addBlock(block);
+        saveArchiveBlockchain();
     }
 
     public void saveArchiveBlockchain() throws IOException {
@@ -75,7 +76,7 @@ public class Archive implements Serializable {
     public String getName() {
         return name;
     }
-
+    public String getArchiveFolder() {return archiveFolder;    }
     public void setName(String name) {
         this.name = name;
     }

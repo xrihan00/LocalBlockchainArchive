@@ -28,6 +28,7 @@ public class NewDocument extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fc = new JFileChooser();
+                fc.setCurrentDirectory(new File("D:/Archiv/"));
                 int r = fc.showOpenDialog(panel);
                 if (r == JFileChooser.APPROVE_OPTION) {
                     directory = fc.getSelectedFile().getAbsolutePath();
@@ -40,6 +41,7 @@ public class NewDocument extends JFrame{
             public void actionPerformed(ActionEvent e) {
                 documentName = docName.getText();
                 authorName = author.getText();
+                frame.setVisible(false);
                 ok=true;
             }
         });
@@ -47,6 +49,9 @@ public class NewDocument extends JFrame{
 
     public void init(){
         frame = new NewDocument();
+        docName.setText("");
+        author.setText("");
+        newContent = null;
         frame.pack();
         frame.setContentPane(this.panel);
         frame.setBounds(100, 100, 300, 200);

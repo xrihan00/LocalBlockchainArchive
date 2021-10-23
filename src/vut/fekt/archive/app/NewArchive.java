@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 
 public class NewArchive extends JFrame {
@@ -38,7 +39,7 @@ public class NewArchive extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fc = new JFileChooser();
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
+                fc.setCurrentDirectory(new File("D:/Archiv/"));
                 int r = fc.showOpenDialog(panel);
                 if (r == JFileChooser.APPROVE_OPTION) {
                     directory = fc.getSelectedFile().getAbsolutePath() + "/" + archiveName.getText();

@@ -19,6 +19,8 @@ public class App {
         mainApp.initMainapp();
         mainApp.frame.setVisible(true);
 
+
+        //thread checkuje okna newArchive a NewDocument jestli s ními uživatel interagoval
         Thread t = new Thread(new Runnable() {
             boolean archiveLoaded =false;
             boolean newDoc = false;
@@ -30,22 +32,23 @@ public class App {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if(na.ok==true&&archiveLoaded==false){
+                    if(na.ok==true){ //pokud uživatel kliknul ok u newarchive, tak je vytvořen nový archiv a předán MainApp aby s ním šlo dál pracovat
                         try {
                             archive = new Archive(na.getName(),na.getDirectory());
-                            archive.loadArchiveBlockchain(new File(na.getDirectory()+"/serializedBlockchain.txt"));
+                            archive.saveArchiveBlockchain();
                             System.out.println("AAAAAA");
                             mainApp.setArchive(archive);
-                            archiveLoaded = true;
-                        } catch (IOException | ClassNotFoundException e) {
+                            na.ok = false;
+                            //archiveLoaded = true;
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-                    if(nd.ok==true&&newDoc==false){
+                    if(nd.ok==true){
                         try {
                             archive.addDocument(nd.getNewContent(),nd.getAuthorName(), nd.getDocumentName(),"1.0");
                             archive.saveArchiveBlockchain();
-                            newDoc= true;
+                            nd.ok = false;
                             //nd= new NewDocument();
                         } catch (Exception e) {
                             e.printStackTrace();
