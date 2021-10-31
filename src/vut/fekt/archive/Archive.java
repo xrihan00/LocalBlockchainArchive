@@ -28,7 +28,7 @@ public class Archive implements Serializable {
     public void addDocument(File content, String author, String docName, String version) throws Exception {
         ArchiveDocument archDoc = new ArchiveDocument(content, archiveFolder, author, docName, version);
         documents.add(archDoc);
-        Block block = new Block(archDoc.docuFile.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId());
+        Block block = new Block(archDoc.docuFile.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId(), archDoc.docName);
         blockchain.addBlock(block);
         saveArchiveBlockchain();
     }
@@ -49,23 +49,22 @@ public class Archive implements Serializable {
         blockchain = (Blockchain) ois.readObject();
     }
 
-    public boolean validateBlockchain() throws IOException, NoSuchAlgorithmException {
-        Boolean result = true;
+    public int validateBlockchain() throws IOException, NoSuchAlgorithmException {
+        int result = 0;
         LinkedList<Block> blocks = blockchain.getBlocks();
         Crypto crypto = new Crypto();
         String blockhash = "FIRST BLOCK";
         for (Block block:blocks) {
-            System.out.println(blockhash);
            if(!FileUtils.getFileHash(block.getFilepath()).equals(block.getFilehash())){
                 System.out.println("Hash souboru " + block.getFileName() + " není validní! Integrita porušena!");
-                result = false;
+                result = 1;
             }
             else{
                 System.out.println("Hash souboru " + block.getFileName() + " je validní.");
             }
             if(!block.getPreviousHash().equals(blockhash)){
                 System.out.println("Blockchain not valid!");
-                result = false;
+                result = 2;
             }
             blockhash = crypto.blockHash(block);
 
@@ -85,3 +84,4 @@ public class Archive implements Serializable {
     }
 
 }
+

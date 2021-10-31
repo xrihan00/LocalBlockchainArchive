@@ -43,7 +43,7 @@ public class Crypto implements Serializable {
     }
 
     //hashovanie bloku
-    public String blockHash(Block block){
+    public static String blockHash(Block block){
         String s = block.getPreviousHash()+
 //                block.getTransaction().getSourcePublicKey().toString()+
 //                block.getTransaction().getDestinationPublicKey().toString()+

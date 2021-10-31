@@ -10,8 +10,8 @@ import java.text.SimpleDateFormat;
 
 public class Block implements Serializable {
 
-
     private String previousHash;
+    private String docName;
     private String filepath;
     private String metapath;
     private String filehash;
@@ -19,12 +19,14 @@ public class Block implements Serializable {
     private int blockId;
 
 
+
     //jeden block blockchainu s informáciou o predchádzajucom hashi a o transakcii spolu s ID hlasu
-    public Block(String filepath, String metapath, int voteId) throws Exception {
+    public Block(String filepath, String metapath, int blockId, String docName) throws Exception {
         this.filepath = filepath;
         this.metapath = metapath;
-        this.blockId = voteId;
-        this.timeStamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date()); //časové razítko hlasu
+        this.blockId = blockId;
+        this.docName = docName;
+        this.timeStamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date()); //časové razítko bloku
         this.filehash = FileUtils.getFileHash(filepath);
     }
 
@@ -68,6 +70,7 @@ public class Block implements Serializable {
     public String getFilehash() {
         return filehash;
     }
+    public String getDocName() { return docName;}
 
     public void setFilehash(String filehash) {
         this.filehash = filehash;
@@ -82,7 +85,7 @@ public class Block implements Serializable {
         sb.append("\nMetadata: " + metapath);
         sb.append("\nHash souboru: " + filehash);
         sb.append("\nČasové razítko: " + getTimeStamp());
-        sb.append("\nID hlasu: " + getBlockId());
+        sb.append("\nID bloku: " + getBlockId());
         return sb.toString();
     }
 }

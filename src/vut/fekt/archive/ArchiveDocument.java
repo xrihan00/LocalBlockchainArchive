@@ -18,9 +18,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 public class ArchiveDocument {
@@ -34,17 +33,24 @@ public class ArchiveDocument {
     int id;
     String version;
     String timestamp;
+    String hash;
+    String contentName;
 
     public ArchiveDocument(File content, String archiveFolder, String author, String docName, String version) throws Exception {
         this.author = author;
         this.docName = docName;
         this.version = version;
         this.content = content;
+        this.hash = FileUtils.getFileHash(content.getAbsolutePath());
+        this.contentName = content.getName();
         Random rng = new Random();
         this.id = rng.nextInt(99000)+1000;
         timestamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date());
         docFolder = Files.createDirectory(Path.of(archiveFolder+"/"+String.valueOf(id)));
         createDocFiles(content);
+    }
+
+    public ArchiveDocument(){
     }
 
     private void createDocFiles(File content) throws IOException, ParserConfigurationException, TransformerException, NoSuchAlgorithmException {
@@ -69,7 +75,7 @@ public class ArchiveDocument {
         root.setAttribute("version", version);
         root.setAttribute("added", timestamp);
         root.setAttribute("id", String.valueOf(id));
-        root.setAttribute("hash",FileUtils.getFileHash(content.getAbsolutePath()));
+        root.setAttribute("hash",hash);
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
@@ -81,5 +87,52 @@ public class ArchiveDocument {
         StreamResult consoleResult = new StreamResult(System.out);
         transformer.transform(source, consoleResult);
 
+    }
+
+    public void loadDocument(File content, File meta) throws ParserConfigurationException, IOException, SAXException {
+        this.content = content;
+        this.metadata = meta;
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(meta);
+        doc.getDocumentElement().normalize();
+
+        NodeList list = doc.getElementsByTagName("metadata");
+        Node node = list.item(0);
+        Element element = (Element) node;
+        //Element element = doc.getElementById("metadata");
+        this.author = element.getAttribute("author");
+        this.docName = element.getAttribute("docName");
+        this.version = element.getAttribute("version");
+        this.timestamp = element.getAttribute("added");
+        this.id = Integer.parseInt(element.getAttribute("id"));
+        this.hash = element.getAttribute("hash");
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public String getDocName() {
+        return docName;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+    public String getContentName(){
+        return contentName;
     }
 }

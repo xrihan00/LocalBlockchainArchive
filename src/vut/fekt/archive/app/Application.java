@@ -38,15 +38,6 @@ public class Application {
 
     }
 
-    @Test
-    public void loadBlockchainTest() throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
-        Archive archive = new Archive("Archiv 1",archivPath);
-        archive.loadArchiveBlockchain(new File(archivPath + "Archiv 1serializedBlockchain.txt"));
-        archive.saveArchiveBlockchain();
-        Boolean valid =archive.validateBlockchain();
-        assertTrue(valid);
-    }
-
 
 
 

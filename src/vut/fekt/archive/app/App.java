@@ -38,9 +38,10 @@ public class App {
                             archive.saveArchiveBlockchain();
                             System.out.println("AAAAAA");
                             mainApp.setArchive(archive);
+                            mainApp.updateList();
                             na.ok = false;
                             //archiveLoaded = true;
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -48,6 +49,7 @@ public class App {
                         try {
                             archive.addDocument(nd.getNewContent(),nd.getAuthorName(), nd.getDocumentName(),"1.0");
                             archive.saveArchiveBlockchain();
+                            mainApp.updateList();
                             nd.ok = false;
                             //nd= new NewDocument();
                         } catch (Exception e) {
