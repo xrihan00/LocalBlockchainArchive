@@ -39,6 +39,7 @@ public class App {
                             System.out.println("AAAAAA");
                             mainApp.setArchive(archive);
                             mainApp.updateList();
+                            mainApp.archiveLabel.setText(archive.getName());
                             na.ok = false;
                             //archiveLoaded = true;
                         } catch (Exception e) {

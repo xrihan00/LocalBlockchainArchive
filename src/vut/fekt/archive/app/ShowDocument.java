@@ -3,6 +3,9 @@ package vut.fekt.archive.app;
 import vut.fekt.archive.ArchiveDocument;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class ShowDocument extends JFrame{
     private JTextField nazevField;
@@ -13,6 +16,7 @@ public class ShowDocument extends JFrame{
     private JTextField versionField;
     private JTextField idField;
     private JPanel panel;
+    private JButton nováVerzeButton;
 
     private ArchiveDocument doc;
 
@@ -33,6 +37,16 @@ public class ShowDocument extends JFrame{
         this.setBounds(100, 100, 300, 200);
         this.setSize(500,300);
 
+        openButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Runtime.getRuntime().exec("explorer.exe /select," + doc.getContentPath());
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
     }
 
 

@@ -13,6 +13,7 @@ public class NewDocument extends JFrame{
     private JButton pickContentButton;
     private JButton OKButton;
     private JTextField author;
+    private JLabel path;
     private String directory;
     private File newContent;
     private ArchiveDocument archdoc;
@@ -34,6 +35,7 @@ public class NewDocument extends JFrame{
                     directory = fc.getSelectedFile().getAbsolutePath();
                     newContent = new File(directory);
                 }
+                path.setText(directory);
             }
         });
         OKButton.addActionListener(new ActionListener() {
@@ -55,7 +57,7 @@ public class NewDocument extends JFrame{
         frame.pack();
         frame.setContentPane(this.panel);
         frame.setBounds(100, 100, 300, 200);
-        frame.setSize(300,200);
+        frame.setSize(300,250);
     }
 
     public NewDocument getFrame() {

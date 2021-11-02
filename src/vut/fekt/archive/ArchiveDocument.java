@@ -132,6 +132,9 @@ public class ArchiveDocument {
     public String getHash() {
         return hash;
     }
+    public String getContentPath() {
+        return content.getAbsolutePath();
+    }
     public String getContentName(){
         return contentName;
     }
