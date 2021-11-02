@@ -40,11 +40,12 @@ public class MainApp extends javax.swing.JFrame {
     public MainApp frame;
     private NewArchive na;
     private NewDocument nd;
+    private ShowDocument sd;
     private Map<String, ArchiveDocument> documentTimeMap = new HashMap<>();
 
     public void initMainapp(){
 
-        frame = new MainApp(this.na, this.nd);
+        frame = new MainApp(this.na, this.nd,this.sd);
         frame.setTitle("Blockchain Archiv");
         frame.pack();
         frame.setContentPane(this.panel1);
@@ -93,9 +94,10 @@ public class MainApp extends javax.swing.JFrame {
 
     }
 
-    public MainApp(NewArchive narch, NewDocument ndoc) {
+    public MainApp(NewArchive narch, NewDocument ndoc, ShowDocument showdoc) {
         this.na = narch;
         this.nd = ndoc;
+        this.sd = showdoc;
         newArchiveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -148,10 +150,9 @@ public class MainApp extends javax.swing.JFrame {
         });
         documentTable.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
             public void valueChanged(ListSelectionEvent event) {
-                if (!event.getValueIsAdjusting()){
-                    ShowDocument sd = new ShowDocument(documentTimeMap.get(documentTable.getValueAt(documentTable.getSelectedRow(),2)));
-                    sd.setVisible(true);
-
+                if ((!event.getValueIsAdjusting())&&(documentTable.getRowCount()!=0)){
+                    sd.init(documentTimeMap.get(documentTable.getValueAt(documentTable.getSelectedRow(),2)));
+                    sd.getFrame().setVisible(true);
                 }
             }
         });

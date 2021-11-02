@@ -47,7 +47,7 @@
           <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Print Blockchain"/>
+          <text value="Výpis Blockchainu"/>
         </properties>
       </component>
       <component id="a0741" class="javax.swing.JButton" binding="addDocumentButton" default-binding="true">
@@ -55,7 +55,7 @@
           <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Add document"/>
+          <text value="Nový dokument"/>
         </properties>
       </component>
       <scrollpane id="87932">
@@ -83,7 +83,7 @@
           <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Validate Blockchain"/>
+          <text value="Validace Blockchainu"/>
         </properties>
       </component>
       <scrollpane id="8495d">

@@ -14,8 +14,9 @@ public class App {
         NewArchive na = new NewArchive();
         na.init();
         NewDocument nd = new NewDocument();
+        ShowDocument sd = new ShowDocument();
 
-        MainApp mainApp = new MainApp(na,nd);
+        MainApp mainApp = new MainApp(na,nd,sd);
         mainApp.initMainapp();
         mainApp.frame.setVisible(true);
 
@@ -34,13 +35,14 @@ public class App {
                     }
                     if(na.ok==true){ //pokud uživatel kliknul ok u newarchive, tak je vytvořen nový archiv a předán MainApp aby s ním šlo dál pracovat
                         try {
+                            na.ok = false;
                             archive = new Archive(na.getName(),na.getDirectory());
                             archive.saveArchiveBlockchain();
                             System.out.println("AAAAAA");
                             mainApp.setArchive(archive);
                             mainApp.updateList();
                             mainApp.archiveLabel.setText(archive.getName());
-                            na.ok = false;
+
                             //archiveLoaded = true;
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -48,15 +50,21 @@ public class App {
                     }
                     if(nd.ok==true){
                         try {
-                            archive.addDocument(nd.getNewContent(),nd.getAuthorName(), nd.getDocumentName(),"1.0");
+                            nd.ok = false;
+                            archive.addDocument(nd.getNewContent(),nd.getAuthorName(), nd.getDocumentName(),nd.getVersion());
                             archive.saveArchiveBlockchain();
                             mainApp.updateList();
-                            nd.ok = false;
+
                             //nd= new NewDocument();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
 
+
+                    }
+                    if(sd.newVersion ==true){
+                        sd.newVersion=false;
+                        nd.initVersion(sd.getDoc().getDocName(),sd.getDoc().getAuthor(),sd.getNewVersionCount());
 
                     }
                     if(archive==null&&mainApp.getArchive()!=null){

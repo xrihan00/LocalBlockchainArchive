@@ -17,26 +17,13 @@ public class ShowDocument extends JFrame{
     private JTextField idField;
     private JPanel panel;
     private JButton nováVerzeButton;
+    private String newVersionCount;
+    public ShowDocument frame;
 
     private ArchiveDocument doc;
+    public boolean newVersion = false;
 
-    public ShowDocument(ArchiveDocument document){
-
-
-        this.doc = document;
-        nazevField.setText(doc.getDocName());
-        autorField.setText(doc.getAuthor());
-        timeField.setText(doc.getTimestamp());
-        obsahField.setText(doc.getContentName());
-        nazevField.setText(doc.getDocName());
-        versionField.setText(doc.getVersion());
-        idField.setText(String.valueOf(doc.getId()));
-
-        this.pack();
-        this.setContentPane(this.panel);
-        this.setBounds(100, 100, 300, 200);
-        this.setSize(500,300);
-
+    public ShowDocument(){
         openButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -47,9 +34,39 @@ public class ShowDocument extends JFrame{
                 }
             }
         });
+        nováVerzeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.setVisible(false);
+                newVersion = true;
+            }
+        });
     }
 
+    public void init(ArchiveDocument document){
+        frame = new ShowDocument();
 
+        doc = document;
+        nazevField.setText(doc.getDocName());
+        autorField.setText(doc.getAuthor());
+        timeField.setText(doc.getTimestamp());
+        obsahField.setText(doc.getContentName());
+        nazevField.setText(doc.getDocName());
+        versionField.setText(doc.getVersion());
+        idField.setText(String.valueOf(doc.getId()));
+
+        frame.pack();
+        frame.setContentPane(this.panel);
+        frame.setBounds(100, 100, 300, 200);
+        frame.setSize(500,300);
+    }
+
+    public String getNewVersionCount(){
+        String current = doc.getVersion();
+        double currentDouble = Double.valueOf(current);
+        double newDouble = currentDouble+1.0;
+        return String.valueOf(newDouble);
+    }
 
     public ArchiveDocument getDoc() {
         return doc;
@@ -57,5 +74,10 @@ public class ShowDocument extends JFrame{
 
     public void setDoc(ArchiveDocument doc) {
         this.doc = doc;
+    }
+
+
+    public ShowDocument getFrame() {
+        return frame;
     }
 }
