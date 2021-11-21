@@ -63,6 +63,9 @@ public class MainApp extends javax.swing.JFrame {
             tableModel.addColumn(columnName);
         }
 
+        //aby nešlo menit hodnoty v tabulce
+        documentTable.setDefaultEditor(Object.class, null);
+
         documentTable.setModel(tableModel);
 
     }
@@ -151,8 +154,13 @@ public class MainApp extends javax.swing.JFrame {
         documentTable.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
             public void valueChanged(ListSelectionEvent event) {
                 if ((!event.getValueIsAdjusting())&&(documentTable.getRowCount()!=0)){
-                    sd.init(documentTimeMap.get(documentTable.getValueAt(documentTable.getSelectedRow(),2)));
-                    sd.getFrame().setVisible(true);
+                    try {
+                        sd.init(documentTimeMap.get(documentTable.getValueAt(documentTable.getSelectedRow(), 2)));
+                        sd.getFrame().setVisible(true);
+                    }
+                    catch (Exception e){
+                        System.out.println("Divná chyba");
+                    }
                 }
             }
         });
