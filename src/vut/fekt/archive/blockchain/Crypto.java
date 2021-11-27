@@ -6,13 +6,10 @@ import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * Trieda slúžiaca na kryptografické objekty s použitým Java secure pre jedoduhšiu prácu
- */
 public class Crypto implements Serializable {
 
     //generovanie klučov
-    public KeyPair generateKeyPair() throws Exception {
+    public static KeyPair generateKeyPair() throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048, new SecureRandom());
         KeyPair pair = generator.generateKeyPair();
@@ -21,10 +18,10 @@ public class Crypto implements Serializable {
     }
 
     //generovanie podpisu
-    public String sign(String plainText, PrivateKey privateKey) throws Exception {
+    public static String sign(byte[] bytes, PrivateKey privateKey) throws Exception {
         Signature privateSignature = Signature.getInstance("SHA256withRSA");
         privateSignature.initSign(privateKey);
-        privateSignature.update(plainText.getBytes(UTF_8));
+        privateSignature.update(bytes);
 
         byte[] signature = privateSignature.sign();
 
@@ -32,10 +29,10 @@ public class Crypto implements Serializable {
     }
 
     //overovanie podpisu
-    public boolean verify(String plainText, String signature, PublicKey publicKey) throws Exception {
+    public static boolean verify(byte[] bytes, String signature, PublicKey publicKey) throws Exception {
         Signature publicSignature = Signature.getInstance("SHA256withRSA");
         publicSignature.initVerify(publicKey);
-        publicSignature.update(plainText.getBytes(UTF_8));
+        publicSignature.update(bytes);
 
         byte[] signatureBytes = Base64.getDecoder().decode(signature);
 
@@ -45,10 +42,8 @@ public class Crypto implements Serializable {
     //hashovanie bloku
     public static String blockHash(Block block){
         String s = block.getPreviousHash()+
-//                block.getTransaction().getSourcePublicKey().toString()+
-//                block.getTransaction().getDestinationPublicKey().toString()+
-//                block.getTransaction().getSum()+
-                block.getFilehash()+
+                block.getSignature()+
+                block.getPubKey()+
                 block.getFilepath()+
                 block.getMetapath()+
                 block.getBlockId()+

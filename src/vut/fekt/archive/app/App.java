@@ -37,7 +37,7 @@ public class App {
                         try {
                             na.ok = false;
                             archive = new Archive(na.getName(),na.getDirectory());
-                            archive.saveArchiveBlockchain();
+                            archive.generateKeys();
                             System.out.println("AAAAAA");
                             mainApp.setArchive(archive);
                             mainApp.updateList();

@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.Random;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -21,6 +24,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
+import vut.fekt.archive.blockchain.Crypto;
 
 public class ArchiveDocument {
     File metadata;
@@ -35,12 +39,16 @@ public class ArchiveDocument {
     String timestamp;
     String hash;
     String contentName;
+    String signature;
+    PrivateKey privateKey;
 
-    public ArchiveDocument(File content, String archiveFolder, String author, String docName, String version) throws Exception {
+    public ArchiveDocument(File content, String archiveFolder, String author, String docName, String version, PrivateKey privateKey) throws Exception {
         this.author = author;
         this.docName = docName;
         this.version = version;
         this.content = content;
+        this.privateKey = privateKey;
+        this.signature = Crypto.sign(FileUtils.getFileHash(content.getAbsolutePath()).getBytes(StandardCharsets.UTF_8),privateKey);
         this.hash = FileUtils.getFileHash(content.getAbsolutePath());
         this.contentName = content.getName();
         Random rng = new Random();
@@ -119,6 +127,10 @@ public class ArchiveDocument {
 
     public int getId() {
         return id;
+    }
+
+    public String getSignature() {
+        return signature;
     }
 
     public String getVersion() {

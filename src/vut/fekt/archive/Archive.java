@@ -6,6 +6,7 @@ import vut.fekt.archive.blockchain.Crypto;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -16,6 +17,7 @@ public class Archive implements Serializable {
     String name;
     Blockchain blockchain = new Blockchain();
     String archiveFolder;
+    KeyPair keyPair;
 
     List<ArchiveDocument> documents = new ArrayList<>();
 
@@ -26,9 +28,9 @@ public class Archive implements Serializable {
     }
 
     public void addDocument(File content, String author, String docName, String version) throws Exception {
-        ArchiveDocument archDoc = new ArchiveDocument(content, archiveFolder, author, docName, version);
+        ArchiveDocument archDoc = new ArchiveDocument(content, archiveFolder, author, docName, version,keyPair.getPrivate());
         documents.add(archDoc);
-        Block block = new Block(archDoc.docuFile.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId(), archDoc.docName);
+        Block block = new Block(archDoc.docuFile.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId(), archDoc.docName,archDoc.getSignature(),keyPair.getPublic());
         blockchain.addBlock(block);
         saveArchiveBlockchain();
     }
@@ -43,10 +45,29 @@ public class Archive implements Serializable {
         fos.close();
     }
 
+    public void saveKeyPair() throws IOException {
+        FileOutputStream fos = new FileOutputStream(new File(archiveFolder+"/KeyPair.txt"));
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(keyPair);
+        oos.close();
+        fos.close();
+    }
+
     public void loadArchiveBlockchain(File chain) throws IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream(chain);
         ObjectInputStream ois = new ObjectInputStream(fis);
         blockchain = (Blockchain) ois.readObject();
+    }
+
+    public void loadKeyPair(File file) throws IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream(file);
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        keyPair = (KeyPair) ois.readObject();
+    }
+
+    public void generateKeys() throws Exception {
+        keyPair = Crypto.generateKeyPair();
+        saveKeyPair();
     }
 
     public int validateBlockchain() throws IOException, NoSuchAlgorithmException {

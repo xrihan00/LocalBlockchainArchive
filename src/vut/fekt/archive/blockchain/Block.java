@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 
 public class Block implements Serializable {
@@ -16,16 +17,20 @@ public class Block implements Serializable {
     private String metapath;
     private String filehash;
     private String timeStamp;
+    private String signature;
+    private PublicKey pubKey;
     private int blockId;
 
 
 
     //jeden block blockchainu s informáciou o predchádzajucom hashi a o transakcii spolu s ID hlasu
-    public Block(String filepath, String metapath, int blockId, String docName) throws Exception {
+    public Block(String filepath, String metapath, int blockId, String docName, String signature, PublicKey pubKey) throws Exception {
         this.filepath = filepath;
         this.metapath = metapath;
         this.blockId = blockId;
         this.docName = docName;
+        this.signature = signature;
+        this.pubKey = pubKey;
         this.timeStamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date()); //časové razítko bloku
         this.filehash = FileUtils.getFileHash(filepath);
     }
@@ -54,26 +59,20 @@ public class Block implements Serializable {
     public String getFilepath() {
         return filepath;
     }
-
-    public void setFilepath(String filepath) {
-        this.filepath = filepath;
-    }
-
     public String getMetapath() {
         return metapath;
     }
-
-    public void setMetapath(String metapath) {
-        this.metapath = metapath;
-    }
-
     public String getFilehash() {
         return filehash;
     }
     public String getDocName() { return docName;}
 
-    public void setFilehash(String filehash) {
-        this.filehash = filehash;
+    public String getSignature() {
+        return signature;
+    }
+
+    public PublicKey getPubKey() {
+        return pubKey;
     }
 
     @Override
@@ -84,6 +83,8 @@ public class Block implements Serializable {
         sb.append("\nCesta k souboru: " + filepath);
         sb.append("\nMetadata: " + metapath);
         sb.append("\nHash souboru: " + filehash);
+        sb.append("\nDigitální podpis: " +getSignature());
+        sb.append("\nVeřejný klíč: " + getPubKey());
         sb.append("\nČasové razítko: " + getTimeStamp());
         sb.append("\nID bloku: " + getBlockId());
         return sb.toString();

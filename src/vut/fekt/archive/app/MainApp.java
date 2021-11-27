@@ -57,7 +57,7 @@ public class MainApp extends javax.swing.JFrame {
     }
 
     public void initTable(){
-        String column[] = {"NÁZEV","AUTOR","VYTVOŘENO"};
+        String column[] = {"NÁZEV","VERZE","AUTOR","VYTVOŘENO","ID"};
 
         for(String columnName : column){
             tableModel.addColumn(columnName);
@@ -86,7 +86,7 @@ public class MainApp extends javax.swing.JFrame {
             File metadata = new File(block.getMetapath());
             ArchiveDocument ad = new ArchiveDocument();
             ad.loadDocument(content,metadata);
-            String[] row = {ad.getDocName(),ad.getAuthor(),ad.getTimestamp()};
+            String[] row = {ad.getDocName(),ad.getVersion(),ad.getAuthor(),ad.getTimestamp(), String.valueOf(ad.getId())};
             tableModel.addRow(row);
             documentTimeMap.put(ad.getTimestamp(),ad);
             documentNames[i]=ad.getDocName();
@@ -121,6 +121,7 @@ public class MainApp extends javax.swing.JFrame {
                 {
                     try {
                         archive = new Archive(fc.getSelectedFile().getName(),fc.getSelectedFile().getAbsolutePath());
+                        archive.loadKeyPair(new File(archive.getArchiveFolder()+"/KeyPair.txt"));
                         archive.loadArchiveBlockchain(new File(archive.getArchiveFolder()+"/serializedBlockchain.txt"));
                         FileLabel.setText("Archiv " + archive.getName() + " načten!");
                         archiveLabel.setText(archive.getName());
