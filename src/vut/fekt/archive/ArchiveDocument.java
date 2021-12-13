@@ -1,7 +1,21 @@
 package vut.fekt.archive;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+import vut.fekt.archive.blockchain.Crypto;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -9,22 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.Random;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.w3c.dom.*;
-import org.xml.sax.SAXException;
-import vut.fekt.archive.blockchain.Crypto;
 
 public class ArchiveDocument {
     File metadata;
@@ -42,14 +42,15 @@ public class ArchiveDocument {
     String signature;
     PrivateKey privateKey;
 
+    //reprezentuje archivní dokument
     public ArchiveDocument(File content, String archiveFolder, String author, String docName, String version, PrivateKey privateKey) throws Exception {
         this.author = author;
         this.docName = docName;
         this.version = version;
         this.content = content;
         this.privateKey = privateKey;
-        this.signature = Crypto.sign(FileUtils.getFileHash(content.getAbsolutePath()).getBytes(StandardCharsets.UTF_8),privateKey);
-        this.hash = FileUtils.getFileHash(content.getAbsolutePath());
+        this.hash = Crypto.getFileHash(content.getAbsolutePath());
+        this.signature = Crypto.sign(hash.getBytes(StandardCharsets.UTF_8),privateKey);
         this.contentName = content.getName();
         Random rng = new Random();
         this.id = rng.nextInt(99000)+1000;
@@ -61,6 +62,7 @@ public class ArchiveDocument {
     public ArchiveDocument(){
     }
 
+    //vytvoří kopii zvoleného obsahu uvnitř archivu
     private void createDocFiles(File content) throws IOException, ParserConfigurationException, TransformerException, NoSuchAlgorithmException {
         FileOutputStream docFile = new FileOutputStream(docFolder+"/"+content.getName());
         Files.copy(content.getAbsoluteFile().toPath(), docFile);
@@ -68,6 +70,7 @@ public class ArchiveDocument {
         createMetadata();
     }
 
+    //vytváří XML soubor s metadaty
     private void createMetadata() throws ParserConfigurationException, IOException, TransformerException, NoSuchAlgorithmException {
         metadata = new File(docFolder+"/"+id+".xml");
         DocumentBuilderFactory dbFactory =
@@ -97,6 +100,7 @@ public class ArchiveDocument {
 
     }
 
+    //načte dokument na základě obsahu a xml metadat
     public void loadDocument(File content, File meta) throws ParserConfigurationException, IOException, SAXException {
         this.content = content;
         this.metadata = meta;
@@ -115,6 +119,7 @@ public class ArchiveDocument {
         this.timestamp = element.getAttribute("added");
         this.id = Integer.parseInt(element.getAttribute("id"));
         this.hash = element.getAttribute("hash");
+        this.contentName = content.getName();
     }
 
     public String getAuthor() {
@@ -141,9 +146,6 @@ public class ArchiveDocument {
         return timestamp;
     }
 
-    public String getHash() {
-        return hash;
-    }
     public String getContentPath() {
         return content.getAbsolutePath();
     }

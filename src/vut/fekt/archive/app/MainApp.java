@@ -5,11 +5,8 @@ import vut.fekt.archive.Archive;
 import vut.fekt.archive.ArchiveDocument;
 import vut.fekt.archive.BlockchainValidator;
 import vut.fekt.archive.blockchain.Block;
-import vut.fekt.archive.blockchain.Crypto;
 
 import javax.swing.*;
-
-import javax.swing.JFileChooser;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -22,7 +19,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-public class MainApp extends javax.swing.JFrame {
+//hlavní okno aplikace
+public class MainApp extends JFrame {
     private JPanel panel1;
     public JButton newArchiveButton;
     private JButton loadArchiveButton;
@@ -43,6 +41,7 @@ public class MainApp extends javax.swing.JFrame {
     private ShowDocument sd;
     private Map<String, ArchiveDocument> documentTimeMap = new HashMap<>();
 
+    //inicializace framu
     public void initMainapp(){
 
         frame = new MainApp(this.na, this.nd,this.sd);
@@ -56,6 +55,7 @@ public class MainApp extends javax.swing.JFrame {
 
     }
 
+    //inicializace vypisu dokumentu
     public void initTable(){
         String column[] = {"NÁZEV","VERZE","AUTOR","VYTVOŘENO","ID"};
 
@@ -65,27 +65,27 @@ public class MainApp extends javax.swing.JFrame {
 
         //aby nešlo menit hodnoty v tabulce
         documentTable.setDefaultEditor(Object.class, null);
-
         documentTable.setModel(tableModel);
 
     }
 
-    public void hideFrame(){
-        this.setVisible(false);
-    }
-
+    //update vypisu dokumentu
     public void updateList() throws ParserConfigurationException, IOException, SAXException {
-        LinkedList<Block> blocks = archive.getBlockchain().getBlocks();
+        LinkedList<Block> blocks = archive.getBlockchain().getBlocks(); //nacteni bloků z blockchainu
         int size = blocks.size();
         String[] documentNames = new String[size];
         int i =0;
-        documentTimeMap = new HashMap<>();
-        tableModel.setRowCount(0);
+        documentTimeMap = new HashMap<>(); //mapa, dokument-timestamp
+        tableModel.setRowCount(0); //vyresetuje tabulku
+        //pro každý blok je přidán nový řádek
         for (Block block:blocks) {
+            //z bloku se vezmou cesty k souborům
             File content = new File(block.getFilepath());
             File metadata = new File(block.getMetapath());
+            //inicializuje se ArchiveDocument
             ArchiveDocument ad = new ArchiveDocument();
             ad.loadDocument(content,metadata);
+            //z ArchiveDocumentu získáme udaje pro výpis
             String[] row = {ad.getDocName(),ad.getVersion(),ad.getAuthor(),ad.getTimestamp(), String.valueOf(ad.getId())};
             tableModel.addRow(row);
             documentTimeMap.put(ad.getTimestamp(),ad);
@@ -94,13 +94,13 @@ public class MainApp extends javax.swing.JFrame {
         }
         documentTable.setModel(tableModel);
 
-
     }
 
     public MainApp(NewArchive narch, NewDocument ndoc, ShowDocument showdoc) {
         this.na = narch;
         this.nd = ndoc;
         this.sd = showdoc;
+        //tlačítko Nový archiv zviditelní dané okno
         newArchiveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -109,17 +109,19 @@ public class MainApp extends javax.swing.JFrame {
 
             }
         });
-;
+
+        //Tlačítko načíst archiv
         loadArchiveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fc = new JFileChooser();
-                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                fc.setCurrentDirectory(new File("D:/Archiv/"));
+                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); //vybíráme jenom složky
+                //fc.setCurrentDirectory(new File("D:/Archiv/")); //kde se průzkumník otevře
                 int r = fc.showOpenDialog(panel1);
                 if (r == JFileChooser.APPROVE_OPTION)
                 {
                     try {
+                        //inicializace archivu na základě vybrané složky
                         archive = new Archive(fc.getSelectedFile().getName(),fc.getSelectedFile().getAbsolutePath());
                         archive.loadKeyPair(new File(archive.getArchiveFolder()+"/KeyPair.txt"));
                         archive.loadArchiveBlockchain(new File(archive.getArchiveFolder()+"/serializedBlockchain.txt"));
@@ -130,14 +132,11 @@ public class MainApp extends javax.swing.JFrame {
                         ioException.printStackTrace();
                     }
                 }
-                // if the user cancelled the operation
                 else{
                     FileLabel.setText("Uživatel zrušil operaci");}
-
-
             }
-
         });
+        //tlačítko nový dokument
         addDocumentButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -146,17 +145,19 @@ public class MainApp extends javax.swing.JFrame {
 
             }
         });
+        //tlačítko výpis blockchainu
         printBlockchainButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 textPane1.setText(getArchive().getBlockchain().toString());
             }
         });
+        //otevření detailu pro vybraný dokument
         documentTable.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
             public void valueChanged(ListSelectionEvent event) {
                 if ((!event.getValueIsAdjusting())&&(documentTable.getRowCount()!=0)){
                     try {
-                        sd.init(documentTimeMap.get(documentTable.getValueAt(documentTable.getSelectedRow(), 2)));
+                        sd.init(documentTimeMap.get(documentTable.getValueAt(documentTable.getSelectedRow(), 3))); //výběr je podle timestampu který je ve 4 sloupic
                         sd.getFrame().setVisible(true);
                     }
                     catch (Exception e){
@@ -165,6 +166,7 @@ public class MainApp extends javax.swing.JFrame {
                 }
             }
         });
+        //tlačítko validovat blockchain
         validateBlockchainButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

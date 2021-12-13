@@ -1,13 +1,9 @@
 package vut.fekt.archive.app;
 
-import vut.fekt.archive.Archive;
-
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 
 public class NewArchive extends JFrame {
     private JTextField archiveName;
@@ -33,7 +29,9 @@ public class NewArchive extends JFrame {
     public String directory;
     public boolean ok = false;
 
+    //okno vytváření nového archivu
     public NewArchive() {
+        //výběr adresáře pro archiv
         pickDirectoryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -48,6 +46,7 @@ public class NewArchive extends JFrame {
                 }
             }
         });
+        //ok tlačítko změní boolean ok na true, což zachytí thread ve třídě App
         OKButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -62,19 +61,10 @@ public class NewArchive extends JFrame {
     public void init(){
         frame = new NewArchive();
         frame.pack();
-
+        frame.setTitle("Nový Archiv");
         frame.setContentPane(this.panel);
         frame.setBounds(100, 100, 300, 200);
         frame.setSize(300,200);
     }
 
-    public void pressOk(){
-
-
-    }
-
-    public String setAndGetDirectory(){
-
-        return directory;
-    }
 }

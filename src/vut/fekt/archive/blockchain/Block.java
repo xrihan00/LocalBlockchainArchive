@@ -1,11 +1,7 @@
 package vut.fekt.archive.blockchain;
 
-import vut.fekt.archive.FileUtils;
-
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 
@@ -23,7 +19,7 @@ public class Block implements Serializable {
 
 
 
-    //jeden block blockchainu s informáciou o predchádzajucom hashi a o transakcii spolu s ID hlasu
+    //reprezentuje jeden blok blockchainu, obsahuje všechny udaje bloku
     public Block(String filepath, String metapath, int blockId, String docName, String signature, PublicKey pubKey) throws Exception {
         this.filepath = filepath;
         this.metapath = metapath;
@@ -32,7 +28,7 @@ public class Block implements Serializable {
         this.signature = signature;
         this.pubKey = pubKey;
         this.timeStamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date()); //časové razítko bloku
-        this.filehash = FileUtils.getFileHash(filepath);
+        this.filehash = Crypto.getFileHash(filepath);
     }
 
     // getter pre predošlý hash
@@ -78,7 +74,7 @@ public class Block implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\nPrevious hash: " + previousHash);
+        sb.append("\nPředchozí hash: " + previousHash);
         sb.append("\nNázev souboru: " + getFileName());
         sb.append("\nCesta k souboru: " + filepath);
         sb.append("\nMetadata: " + metapath);

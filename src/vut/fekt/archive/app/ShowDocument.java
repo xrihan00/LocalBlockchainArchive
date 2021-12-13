@@ -16,7 +16,7 @@ public class ShowDocument extends JFrame{
     private JTextField versionField;
     private JTextField idField;
     private JPanel panel;
-    private JButton nováVerzeButton;
+    private JButton novaVerzeButton;
     private String newVersionCount;
     public ShowDocument frame;
 
@@ -24,6 +24,7 @@ public class ShowDocument extends JFrame{
     public boolean newVersion = false;
 
     public ShowDocument(){
+        //tlačítko Otevřít obsah, otevře průzkumník ve složce kde se nachází obsah
         openButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -34,7 +35,9 @@ public class ShowDocument extends JFrame{
                 }
             }
         });
-        nováVerzeButton.addActionListener(new ActionListener() {
+        //tlačítko Nová verze
+        //schova okno, boolean newVersion je true, což zachyti thread ve třídě App a spustí vytváření nové verze
+        novaVerzeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 frame.setVisible(false);
@@ -45,7 +48,7 @@ public class ShowDocument extends JFrame{
 
     public void init(ArchiveDocument document){
         frame = new ShowDocument();
-
+        frame.setTitle("Detail dokumentu");
         doc = document;
         nazevField.setText(doc.getDocName());
         autorField.setText(doc.getAuthor());

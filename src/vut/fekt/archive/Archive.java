@@ -7,9 +7,7 @@ import vut.fekt.archive.blockchain.Crypto;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Archive implements Serializable {
@@ -19,14 +17,17 @@ public class Archive implements Serializable {
     String archiveFolder;
     KeyPair keyPair;
 
+    //seznam dokumentů
     List<ArchiveDocument> documents = new ArrayList<>();
 
+    //interní reprezentace celého archivu
     public Archive(String name, String folder) throws IOException {
         this.archiveFolder = folder;
         this.name = name;
         new File(archiveFolder).mkdirs();
     }
 
+    //přidávání dokumentu
     public void addDocument(File content, String author, String docName, String version) throws Exception {
         ArchiveDocument archDoc = new ArchiveDocument(content, archiveFolder, author, docName, version,keyPair.getPrivate());
         documents.add(archDoc);
@@ -35,6 +36,7 @@ public class Archive implements Serializable {
         saveArchiveBlockchain();
     }
 
+    //ukládání blockchainu pomocí serializace
     public void saveArchiveBlockchain() throws IOException {
         FileOutputStream fos = new FileOutputStream(new File(archiveFolder+"/blockchain.txt"));
         fos.write(blockchain.toString().getBytes(StandardCharsets.UTF_8));
@@ -45,6 +47,7 @@ public class Archive implements Serializable {
         fos.close();
     }
 
+    //ukládání klíčů pomocí serializace
     public void saveKeyPair() throws IOException {
         FileOutputStream fos = new FileOutputStream(new File(archiveFolder+"/KeyPair.txt"));
         ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -53,45 +56,25 @@ public class Archive implements Serializable {
         fos.close();
     }
 
+    //načtení serializovaného blockchainu
     public void loadArchiveBlockchain(File chain) throws IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream(chain);
         ObjectInputStream ois = new ObjectInputStream(fis);
         blockchain = (Blockchain) ois.readObject();
     }
-
+    //načtení serializovaných klíčů
     public void loadKeyPair(File file) throws IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream(file);
         ObjectInputStream ois = new ObjectInputStream(fis);
         keyPair = (KeyPair) ois.readObject();
     }
 
+    //vygeneruje klíče
     public void generateKeys() throws Exception {
         keyPair = Crypto.generateKeyPair();
         saveKeyPair();
     }
 
-    public int validateBlockchain() throws IOException, NoSuchAlgorithmException {
-        int result = 0;
-        LinkedList<Block> blocks = blockchain.getBlocks();
-        Crypto crypto = new Crypto();
-        String blockhash = "FIRST BLOCK";
-        for (Block block:blocks) {
-           if(!FileUtils.getFileHash(block.getFilepath()).equals(block.getFilehash())){
-                System.out.println("Hash souboru " + block.getFileName() + " není validní! Integrita porušena!");
-                result = 1;
-            }
-            else{
-                System.out.println("Hash souboru " + block.getFileName() + " je validní.");
-            }
-            if(!block.getPreviousHash().equals(blockhash)){
-                System.out.println("Blockchain not valid!");
-                result = 2;
-            }
-            blockhash = crypto.blockHash(block);
-
-        }
-        return result;
-    }
 
     public String getName() {
         return name;

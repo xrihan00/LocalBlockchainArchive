@@ -1,14 +1,18 @@
 package vut.fekt.archive.blockchain;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.*;
 import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+//kryptograficke pomocne metody
 public class Crypto implements Serializable {
 
-    //generovanie klučov
+    //vygeneruje RSA veřejný/soukromý klíč
     public static KeyPair generateKeyPair() throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048, new SecureRandom());
@@ -17,7 +21,7 @@ public class Crypto implements Serializable {
         return pair;
     }
 
-    //generovanie podpisu
+    //podepíše byte[] soukormým RSA klíčem
     public static String sign(byte[] bytes, PrivateKey privateKey) throws Exception {
         Signature privateSignature = Signature.getInstance("SHA256withRSA");
         privateSignature.initSign(privateKey);
@@ -28,7 +32,7 @@ public class Crypto implements Serializable {
         return Base64.getEncoder().encodeToString(signature);
     }
 
-    //overovanie podpisu
+    //ověří platnost podpisu
     public static boolean verify(byte[] bytes, String signature, PublicKey publicKey) throws Exception {
         Signature publicSignature = Signature.getInstance("SHA256withRSA");
         publicSignature.initVerify(publicKey);
@@ -39,7 +43,7 @@ public class Crypto implements Serializable {
         return publicSignature.verify(signatureBytes);
     }
 
-    //hashovanie bloku
+    //hashuje blok
     public static String blockHash(Block block){
         String s = block.getPreviousHash()+
                 block.getSignature()+
@@ -65,5 +69,24 @@ public class Crypto implements Serializable {
             hexString.append(hex);
         }
         return hexString.toString();
+    }
+
+    public static String getFileHash(String filepath) throws NoSuchAlgorithmException, IOException {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        System.out.println("Hashing "+filepath);
+        FileInputStream fis =new FileInputStream(filepath);
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        try (DigestInputStream dis = new DigestInputStream(bis, md)) {
+            while (dis.read() != -1) ; //empty loop to clear the data
+            md = dis.getMessageDigest();
+        }
+        System.out.println("aaa");
+        // bytes to hex
+        StringBuilder result = new StringBuilder();
+        for (byte b : md.digest()) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
+
     }
 }

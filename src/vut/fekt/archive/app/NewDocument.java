@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+
 public class NewDocument extends JFrame{
     private JPanel panel;
     private JTextField docName;
@@ -24,13 +25,14 @@ public class NewDocument extends JFrame{
 
     boolean ok = false;
 
-
+    //okno vytváření nového dokumentu
     public NewDocument() {
+        //výběr souboru obsahu
         pickContentButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fc = new JFileChooser();
-                fc.setCurrentDirectory(new File("D:/Archiv/"));
+                //fc.setCurrentDirectory(new File("D:/Archiv/"));
                 int r = fc.showOpenDialog(panel);
                 if (r == JFileChooser.APPROVE_OPTION) {
                     directory = fc.getSelectedFile().getAbsolutePath();
@@ -39,6 +41,7 @@ public class NewDocument extends JFrame{
                 path.setText(directory);
             }
         });
+        //ok tlačítko změní boolean ok na true, což zachytí thread ve třídě App
         OKButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -50,8 +53,10 @@ public class NewDocument extends JFrame{
         });
     }
 
+    //inicializace
     public void init(){
         frame = new NewDocument();
+        frame.setTitle("Nový dokument");
         docName.setText("");
         author.setText("");
         docName.setEditable(true);
@@ -65,6 +70,7 @@ public class NewDocument extends JFrame{
         frame.setSize(300,250);
     }
 
+    //inicializace pokud se jedná o novou verzi
     public void initVersion(String name, String auth,String newVersion){
         frame = new NewDocument();
         version = newVersion;
