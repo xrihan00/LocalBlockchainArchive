@@ -2,12 +2,25 @@ package vut.fekt.archive.app;
 
 
 import vut.fekt.archive.Archive;
+import vut.fekt.archive.Connection;
+
+import javax.swing.*;
+import java.io.IOException;
+import java.util.List;
 
 public class App {
     public static  Archive archive;
 
     //hlavní metoda celé  aplikace
     public static void main(String[] args) {
+
+        Client client = new Client();
+        try {
+            client.createConnection();
+            System.out.println("Conenction succesful");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //inicializuje jednotlivá okna aplikace
         NewArchive na = new NewArchive();
@@ -18,6 +31,8 @@ public class App {
         MainApp mainApp = new MainApp(na,nd,sd);
         mainApp.initMainapp();
         mainApp.frame.setVisible(true); //hlavní okno je po spuštění jediné zviditelněno
+
+
 
         //thread kontroluje okna newArchive a NewDocument jestli s ními uživatel interagoval
         Thread t = new Thread(new Runnable() {
@@ -39,6 +54,7 @@ public class App {
                             mainApp.setArchive(archive); //předá hlavnímu oknu archiv
                             mainApp.updateList();
                             mainApp.archiveLabel.setText(archive.getName());
+                            client.setVypis("Test");
 
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -75,7 +91,27 @@ public class App {
         });
         t.start();
 
+        String v = "";
+        Thread vypis = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true){
+                    try {
+                        Thread.sleep(5);
+                        if(!mainApp.getVypis().equals(client.vypis)){
+                            System.out.println("We got here!");
+                            mainApp.setVypis(client.vypis);
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        vypis.start();
+
     }
 
+    // výsledný výpis pomocí objektu SwingWorker
 
 }

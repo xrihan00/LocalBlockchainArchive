@@ -31,6 +31,7 @@ public class MainApp extends JFrame {
     private JButton validateBlockchainButton;
     private JTable documentTable;
     public JLabel archiveLabel;
+    private JTextPane vypis;
     DefaultTableModel tableModel = new DefaultTableModel();
     //documentTable.addColumn();
 
@@ -53,6 +54,14 @@ public class MainApp extends JFrame {
         frame.setSize(500,500);
         initTable();
 
+    }
+
+    public void setVypis(String s){
+        vypis.setText(s);
+    }
+
+    public String getVypis(){
+        return vypis.getText();
     }
 
     //inicializace vypisu dokumentu
