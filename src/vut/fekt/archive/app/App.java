@@ -99,7 +99,6 @@ public class App {
                     try {
                         Thread.sleep(5);
                         if(!mainApp.getVypis().equals(client.vypis)){
-                            System.out.println("We got here!");
                             mainApp.setVypis(client.vypis);
                         }
                     } catch (InterruptedException e) {
@@ -111,7 +110,5 @@ public class App {
         vypis.start();
 
     }
-
-    // výsledný výpis pomocí objektu SwingWorker
 
 }

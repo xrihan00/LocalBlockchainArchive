@@ -5,6 +5,7 @@ import vut.fekt.archive.Archive;
 import vut.fekt.archive.ArchiveDocument;
 import vut.fekt.archive.BlockchainValidator;
 import vut.fekt.archive.blockchain.Block;
+import vut.fekt.archive.blockchain.Blockchain;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -15,6 +16,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -32,6 +35,8 @@ public class MainApp extends JFrame {
     private JTable documentTable;
     public JLabel archiveLabel;
     private JTextPane vypis;
+    private JButton createBlockchainButton;
+    private JTextField urlField;
     DefaultTableModel tableModel = new DefaultTableModel();
     //documentTable.addColumn();
 
@@ -105,7 +110,7 @@ public class MainApp extends JFrame {
 
     }
 
-    public MainApp(NewArchive narch, NewDocument ndoc, ShowDocument showdoc) {
+    public MainApp(NewArchive narch, NewDocument ndoc, ShowDocument showdoc){
         this.na = narch;
         this.nd = ndoc;
         this.sd = showdoc;
@@ -190,6 +195,33 @@ public class MainApp extends JFrame {
                 FileLabel.setText(result);
                 textPane1.setText(bv.getDetailedLog());
 
+            }
+        });
+        createBlockchainButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String folder = urlField.getText();
+                    Blockchain chain = new Blockchain();
+                    System.out.println(folder);
+                    if (folder != null) {
+                        Path file = Path.of(folder + "documents.txt");
+                        String text = Files.readString(file);
+                        String[] docs = text.split(",");
+                        for (String doc : docs) {
+                            File docFiles = new File(folder + "/" + doc);
+                            System.out.println(folder + doc);
+                            if (docFiles.listFiles() != null) {
+                                for (File f : docFiles.listFiles()) {
+                                    System.out.println(f.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception eee){
+                    eee.printStackTrace();
+                }
             }
         });
     }

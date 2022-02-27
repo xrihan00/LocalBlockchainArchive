@@ -1,15 +1,13 @@
 package vut.fekt.archive;
 
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 import org.junit.Test;
 import vut.fekt.archive.blockchain.Block;
@@ -46,4 +44,28 @@ public class TestClass {
         String hash2 = Crypto.getFileHash("D:/Archiv/test3.png");
         assertEquals(hash1, hash2);
     }
+
+
+    @Test
+    public void parseTest() throws Exception {
+        String archive = "D:/Archiv/_Archive2/";
+        Path file = Path.of(archive + "documents.txt");
+        String text = Files.readString(file);
+        String[] docs = text.split(",");
+        for (String doc: docs) {
+            File docFiles = new File(archive+"/"+doc);
+            System.out.println(archive+doc);
+            if(docFiles.listFiles()!=null) {
+                for (File f : docFiles.listFiles()) {
+                    System.out.println(f.getName());
+                }
+                ;
+            }
+        }
+    }
+
+
+
+
+
 }
