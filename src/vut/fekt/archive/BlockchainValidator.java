@@ -31,7 +31,7 @@ public class BlockchainValidator {
         //for loop který prochází blok po bloku
         for (Block block : blocks) {
             detailedLog+="\nDokument " + block.getDocName() + "\n";
-            String filehash = Crypto.getFileHash(block.getFilepath());
+            String filehash = Crypto.getHashOfFiles(block.getFilepath());
             System.out.println(filehash);
             boolean alreadyAddedToInvalid=false; //jestli už je blok v listu nevalidních bloků
             //test jestli se shoduje hodnota hashe souboru s opravdovým hashem souboru
@@ -42,7 +42,7 @@ public class BlockchainValidator {
                 alreadyAddedToInvalid = true;
                 result = false;
             } else {
-                detailedLog+=("\nHash souboru " + block.getFileName() + " je validní.");
+                detailedLog+=("\nHash je validní.");
             }
             //ověření validity podpisu
             boolean signature = Crypto.verify(filehash.getBytes(StandardCharsets.UTF_8),block.getSignature(),block.getPubKey());

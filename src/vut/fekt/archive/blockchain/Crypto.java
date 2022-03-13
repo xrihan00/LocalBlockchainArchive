@@ -1,9 +1,6 @@
 package vut.fekt.archive.blockchain;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.security.*;
 import java.util.Base64;
 
@@ -19,6 +16,12 @@ public class Crypto implements Serializable {
         KeyPair pair = generator.generateKeyPair();
 
         return pair;
+    }
+
+    public KeyPair loadKeyPair(File file) throws IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream(file);
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        return (KeyPair) ois.readObject();
     }
 
     //podepíše byte[] soukormým RSA klíčem
@@ -80,7 +83,6 @@ public class Crypto implements Serializable {
             while (dis.read() != -1) ; //empty loop to clear the data
             md = dis.getMessageDigest();
         }
-        System.out.println("aaa");
         // bytes to hex
         StringBuilder result = new StringBuilder();
         for (byte b : md.digest()) {
@@ -88,5 +90,26 @@ public class Crypto implements Serializable {
         }
         return result.toString();
 
+    }
+
+    public static String getStringHash(String string) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        System.out.println("Hashing "+string);
+        md.update(string.getBytes(UTF_8));
+        byte[] bytes = md.digest();
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
+    }
+
+    public static String getHashOfFiles(String[] f) throws NoSuchAlgorithmException, IOException {
+        String s = "";
+        for (String file:f) {
+            //s+=Crypto.getFileHash(folder.getAbsolutePath()+"/"+file);
+            s+=Crypto.getFileHash(file);
+        }
+        return Crypto.getStringHash(s);
     }
 }

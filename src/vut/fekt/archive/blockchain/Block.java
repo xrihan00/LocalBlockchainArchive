@@ -1,7 +1,9 @@
 package vut.fekt.archive.blockchain;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 
@@ -9,7 +11,7 @@ public class Block implements Serializable {
 
     private String previousHash;
     private String docName;
-    private String filepath;
+    private String[] filepath;
     private String metapath;
     private String filehash;
     private String timeStamp;
@@ -20,7 +22,7 @@ public class Block implements Serializable {
 
 
     //reprezentuje jeden blok blockchainu, obsahuje všechny udaje bloku
-    public Block(String filepath, String metapath, int blockId, String docName, String signature, PublicKey pubKey) throws Exception {
+    public Block(String[] filepath, String metapath, int blockId, String docName, String signature, PublicKey pubKey) throws Exception {
         this.filepath = filepath;
         this.metapath = metapath;
         this.blockId = blockId;
@@ -28,7 +30,18 @@ public class Block implements Serializable {
         this.signature = signature;
         this.pubKey = pubKey;
         this.timeStamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date()); //časové razítko bloku
-        this.filehash = Crypto.getFileHash(filepath);
+        this.filehash = Crypto.getFileHash(filepath[0]);
+    }
+
+    public Block(String[] filepath, String metapath, int blockId, String docName, String signature, PublicKey pubKey, String filehash) throws Exception {
+        this.filepath = filepath;
+        this.metapath = metapath;
+        this.blockId = blockId;
+        this.docName = docName;
+        this.signature = signature;
+        this.pubKey = pubKey;
+        this.timeStamp = new SimpleDateFormat("HH:mm:ss dd. MM. yyyy").format(new java.util.Date()); //časové razítko bloku
+        this.filehash = filehash;
     }
 
     // getter pre predošlý hash
@@ -50,9 +63,9 @@ public class Block implements Serializable {
     }
 
     public String getFileName(){
-        return new File(filepath).getName();
+        return new File(filepath[0]).getName();
     }
-    public String getFilepath() {
+    public String[] getFilepath() {
         return filepath;
     }
     public String getMetapath() {
@@ -75,7 +88,6 @@ public class Block implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("\nPředchozí hash: " + previousHash);
-        sb.append("\nNázev souboru: " + getFileName());
         sb.append("\nCesta k souboru: " + filepath);
         sb.append("\nMetadata: " + metapath);
         sb.append("\nHash souboru: " + filehash);

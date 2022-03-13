@@ -31,7 +31,7 @@ public class Archive implements Serializable {
     public void addDocument(File content, String author, String docName, String version) throws Exception {
         ArchiveDocument archDoc = new ArchiveDocument(content, archiveFolder, author, docName, version,keyPair.getPrivate());
         documents.add(archDoc);
-        Block block = new Block(archDoc.docuFile.getAbsolutePath(),archDoc.metadata.getAbsolutePath(), blockchain.randomId(), archDoc.docName,archDoc.getSignature(),keyPair.getPublic());
+        Block block = new Block(new String[]{archDoc.docuFile.getAbsolutePath()},archDoc.metadata.getAbsolutePath(), blockchain.randomId(), archDoc.docName,archDoc.getSignature(),keyPair.getPublic());
         blockchain.addBlock(block);
         saveArchiveBlockchain();
     }

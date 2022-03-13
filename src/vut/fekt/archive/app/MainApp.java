@@ -6,6 +6,7 @@ import vut.fekt.archive.ArchiveDocument;
 import vut.fekt.archive.BlockchainValidator;
 import vut.fekt.archive.blockchain.Block;
 import vut.fekt.archive.blockchain.Blockchain;
+import vut.fekt.archive.blockchain.Crypto;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -16,8 +17,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyPair;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -41,6 +46,9 @@ public class MainApp extends JFrame {
     //documentTable.addColumn();
 
     private Archive archive;
+    public Blockchain blockchain = new Blockchain();
+    private KeyPair keyPair;
+
     public MainApp frame;
     private NewArchive na;
     private NewDocument nd;
@@ -94,7 +102,7 @@ public class MainApp extends JFrame {
         //pro každý blok je přidán nový řádek
         for (Block block:blocks) {
             //z bloku se vezmou cesty k souborům
-            File content = new File(block.getFilepath());
+            File content = new File(block.getFilepath()[1]);
             File metadata = new File(block.getMetapath());
             //inicializuje se ArchiveDocument
             ArchiveDocument ad = new ArchiveDocument();
@@ -114,6 +122,12 @@ public class MainApp extends JFrame {
         this.na = narch;
         this.nd = ndoc;
         this.sd = showdoc;
+
+        try {
+            keyPair = Crypto.generateKeyPair();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         //tlačítko Nový archiv zviditelní dané okno
         newArchiveButton.addActionListener(new ActionListener() {
             @Override
@@ -163,7 +177,7 @@ public class MainApp extends JFrame {
         printBlockchainButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                textPane1.setText(getArchive().getBlockchain().toString());
+                textPane1.setText(blockchain.toString());
             }
         });
         //otevření detailu pro vybraný dokument
@@ -184,8 +198,8 @@ public class MainApp extends JFrame {
         validateBlockchainButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FileLabel.setText("Validating blockchain of archive " + archive.getName() + "...");
-                BlockchainValidator bv = new BlockchainValidator(archive.getBlockchain());
+               // FileLabel.setText("Validating blockchain of archive " + archive.getName() + "...");
+                BlockchainValidator bv = new BlockchainValidator(blockchain);
                 try {
                     bv.validate();
                 } catch (Exception ee) {
@@ -202,20 +216,18 @@ public class MainApp extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     String folder = urlField.getText();
-                    Blockchain chain = new Blockchain();
                     System.out.println(folder);
                     if (folder != null) {
                         Path file = Path.of(folder + "documents.txt");
                         String text = Files.readString(file);
                         String[] docs = text.split(",");
                         for (String doc : docs) {
-                            File docFiles = new File(folder + "/" + doc);
-                            System.out.println(folder + doc);
-                            if (docFiles.listFiles() != null) {
-                                for (File f : docFiles.listFiles()) {
-                                    System.out.println(f.getName());
-                                }
+                            File docFolder = new File(folder + "/" + doc);
+                            if(docFolder.listFiles()!=null) {
+                                System.out.println(docFolder.getAbsolutePath());
+                                blockchain.addBlock(createBlock(docFolder,doc));
                             }
+
                         }
                     }
                 }
@@ -226,6 +238,32 @@ public class MainApp extends JFrame {
         });
     }
 
+    public Block createBlock(File folder, String docId) throws Exception {
+        String meta=null;
+        String[] content= {};
+        ArrayList<String> contents = new ArrayList<>();
+       // int i = 0;
+        for (File f : folder.listFiles()) {
+            String mimeType = Files.probeContentType(f.toPath());
+            if(mimeType.contains("xml")&&f.getName().contains(docId)){
+                meta=f.getAbsolutePath();
+            }
+            else {
+                //content[i] = f.getAbsolutePath();
+                contents.add(f.getAbsolutePath());
+                //i++;
+            }
+        }
+        /*String[] files = folder.list();
+        for (int i = 0; i < files.length; i++) {
+            files[i] = folder.getAbsolutePath()+"/"+files[i];
+        }
+        */
+        String hash = Crypto.getHashOfFiles(contents.toArray(new String[0]));
+        Block block = new Block(contents.toArray(new String[0]),meta,blockchain.getBlocks().size(), docId, Crypto.sign(hash.getBytes(StandardCharsets.UTF_8),keyPair.getPrivate()),keyPair.getPublic(), hash);
+        return block;
+
+    }
 
     public Archive getArchive() {
         return archive;

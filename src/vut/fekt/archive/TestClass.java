@@ -33,11 +33,11 @@ public class TestClass {
         }
         KeyPair keys = Crypto.generateKeyPair();
         Blockchain blockchain = new Blockchain();
-        Block block = new Block(downloaded, downloaded, 0, "a", Crypto.sign(Files.readAllBytes(Path.of("D:/Archiv/test2.pdf")),keys.getPrivate()), keys.getPublic());
-        blockchain.addBlock(block);
+       // Block block = new Block(downloaded, downloaded, 0, "a", Crypto.sign(Files.readAllBytes(Path.of("D:/Archiv/test2.pdf")),keys.getPrivate()), keys.getPublic());
+       // blockchain.addBlock(block);
 
 
-        System.out.println(block.toString());
+        //System.out.println(block.toString());
         String compareFile = "D:/Archiv/test3.pdf";
 
         String hash1 = Crypto.getFileHash("D:/Archiv/test2.png");
@@ -64,7 +64,11 @@ public class TestClass {
         }
     }
 
-
+@Test
+    public void hashTest() throws NoSuchAlgorithmException {
+        System.out.println(Crypto.getStringHash("aaa"));
+    System.out.println(Crypto.getStringHash("aba"));
+}
 
 
 
