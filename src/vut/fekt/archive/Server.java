@@ -3,14 +3,19 @@ package vut.fekt.archive;
 import javax.swing.*;
 import java.io.*;
 import java.net.*;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class Server extends Thread{
     private JPanel panelserver;
     private JLabel label;
     static Vector<ClientHandler> ar = new Vector<>();
     static int i = 0;
+    static HashMap<String, String> secrets = new HashMap<>();
 
     public static void main(String[]args) throws IOException{               // metóda main na spuštění aplikácie Server
         JFrame frame = new JFrame("Server");                            // GUI pre aplikáciu Server
@@ -20,6 +25,8 @@ public class Server extends Thread{
         frame.setVisible(true);
         frame.setBounds(100, 100, 300, 100);
 
+        loadSecrets();
+
         ServerSocket serverSocket = new ServerSocket(2021);             // vytvorenie Socketu pre Server, potom vytvorenie triedy Client Handler v novom vlákne
         Socket socket;
         while (true){
@@ -28,7 +35,7 @@ public class Server extends Thread{
 
             DataInputStream dis = new DataInputStream((socket.getInputStream()));       // vstupní data
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());      // výstupní data
-            ClientHandler clientHandler = new ClientHandler(socket,"client"+i,dis, dos);
+            ClientHandler clientHandler = new ClientHandler(socket,"client"+i,dis, dos, secrets);
             Thread t = new Thread(clientHandler);
 
             System.out.println("Adding client"+i);
@@ -36,6 +43,18 @@ public class Server extends Thread{
             System.out.println(ar);
             t.start();
             i++;
+        }
+    }
+
+    private static void loadSecrets() throws IOException {
+        //String path = System.getProperty("user.dir");
+        Path path  = Path.of("D:/secrets.txt");
+        String all = Files.readString(path);
+        String[] pairs = all.split(";");
+        for (String pair:pairs) {
+            System.out.println(pair);
+            String[] login = pair.split(":");
+            secrets.put(login[0],login[1]);
         }
     }
 }
@@ -47,15 +66,20 @@ class ClientHandler implements Runnable {
     Socket socket;
     boolean isLogged;
     boolean isAdmin;
+    boolean isAuthorized;
+    HashMap<String, String> secrets;
+
 
     // konstruktor pre triedu clientHandler
-    public ClientHandler(Socket socket, String name, DataInputStream dis, DataOutputStream dos) {
+    public ClientHandler(Socket socket, String name, DataInputStream dis, DataOutputStream dos, HashMap<String, String> secrets) throws IOException {
         this.dos = dos;
         this.dis = dis;
         this.name = name;
         this.socket = socket;
         this.isLogged = true;
         this.isAdmin = false;
+        this.isAuthorized = false;
+        this.secrets = secrets;
     }
 
     // metoda s cyklom while
@@ -73,7 +97,6 @@ class ClientHandler implements Runnable {
                     String recipient = st.nextToken();                                      // príjemca
                     System.out.println(recipient);
 
-
                     if (MsgToSend.equals("End")) {
                         this.isLogged = false;
                         this.dos.close();
@@ -82,6 +105,14 @@ class ClientHandler implements Runnable {
                         System.out.println("Socket closed.");
                         return;
                     }
+
+                    if (recipient.equals("server")) {
+                        String[] result = parse(MsgToSend);
+                        recipient = name;
+                        MsgToSend = result[0] + ";"+result[1];
+                    }
+
+
 
                     for (ClientHandler mc : Server.ar) {                                    // preposielanie správ
                         if (mc.name.equals(recipient) && mc.isLogged == true) {             //pošle zprávu zadanému příjemci
@@ -95,9 +126,68 @@ class ClientHandler implements Runnable {
                     }
                     received = null;
                 }
-            } catch (IOException e) {
+            } catch (SocketException f){
+                System.out.println("Unexpected disconnect");
+                return;
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
     }
+
+    public String[] parse(String message) throws IOException, ClassNotFoundException {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
+        StringTokenizer st = new StringTokenizer(message, ";");
+        String[] result= {null,null};
+        String code = st.nextToken();
+        String msg = st.nextToken();
+
+        switch (code) {
+            case "auth":
+                String[] pair = msg.split(":");
+                result[1] = authenticate(pair[0],pair[1]);
+                if(isAuthorized){ result[0] = "authSucc";}
+                else result[0] = "authFail";
+                break;
+            case "files":
+                String directory = msg;
+                ArrayList<String> fileList;
+                File dir = new File("C:/Programy/Xampp/htdocs/"+directory);
+                File[] files = dir.listFiles();
+                result[0] = "files";
+                result[1] = serialize(files);
+                Path path = Path.of("C:/Programy/Xampp/htdocs/documents.txt");
+                Charset charset = StandardCharsets.UTF_8;
+                String content = new String(Files.readAllBytes(path), charset);
+                content = content.replaceAll(directory+",", "");
+                Files.write(path, content.getBytes(charset));
+                break;
+        }
+        return result;
+    }
+
+    private String authenticate(String username, String pass){
+        isAuthorized = false;
+        System.out.println("Authenticaton - Username: " + username + " , Password: " + pass);
+        if(!secrets.containsKey(username)){
+            return "Uživatel nenalezen";
+        }
+        else if(!secrets.get(username).equals(pass)){
+            System.out.println("Correct password: " +secrets.get(username));
+            return "Špatné heslo";
+        }
+        else if(secrets.get(username).equals(pass)){
+            isAuthorized = true;
+            return "Přihlášení úspěšné";
+        }
+        else return "Autentizace byla neúspěšná";
+    }
+
+    private static String serialize(Serializable o) throws IOException {            // serializace objektů do Stringu pro přenos
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(o);
+        oos.close();
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
+
 }

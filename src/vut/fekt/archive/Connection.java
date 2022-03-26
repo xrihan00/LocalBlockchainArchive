@@ -10,10 +10,10 @@ public class Connection{
     private String receivedData;
     private DataOutputStream dos;
 
-    public void initialize() throws IOException{                    // inicializace pro vytvoření komunikace - connection
+    public void initialize(String url) throws IOException{                    // inicializace pro vytvoření komunikace - connection
         Scanner sc = new Scanner(System.in);
 
-        InetAddress ip = InetAddress.getByName("localhost");
+        InetAddress ip = InetAddress.getByName(url);
         Socket socket= new Socket(ip,port);
         DataInputStream dis = new DataInputStream((socket.getInputStream()));           // vytvoření dataInputStream pro příchozí komunikaci
         this.dos = new DataOutputStream(socket.getOutputStream());

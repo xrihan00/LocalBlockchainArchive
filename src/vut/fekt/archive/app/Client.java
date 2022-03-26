@@ -2,8 +2,10 @@ package vut.fekt.archive.app;
 
 import vut.fekt.archive.Connection;
 import vut.fekt.archive.blockchain.Block;
+import vut.fekt.archive.blockchain.Blockchain;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
@@ -11,10 +13,17 @@ import java.util.StringTokenizer;
 public class Client {
     public Connection connection;
     public String vypis = " ";
+    public boolean isAuthorized = false;
+    public boolean newVypis = false;
+    public boolean newBlock = false;
+    public File[] newFiles = null;
+    public Blockchain blockchain = null;
+    public ArrayList<Blockchain> chains = null;
+    public Blockchain newBlockchain = null;
 
-    public void createConnection() throws IOException {                 // je vytvořeno spojení se serverem
+    public void createConnection(String url) throws IOException {                 // je vytvořeno spojení se serverem
         connection = new Connection();
-        connection.initialize();
+        connection.initialize(url);
         Thread receive = new Thread(new Runnable(){
             @Override
             public void run() {
@@ -22,7 +31,7 @@ public class Client {
                     if(connection.getReceivedData()!=null) {            // kontroluje se proměnná recievedData ve třídě Connection
                         try {                                           // pokud jsou přijata data, tak se využije parsování, kdy podle kódu určíme co se bude dělat dále
                             parse(connection.getReceivedData());
-                        } catch (IOException |ClassNotFoundException e) {
+                        } catch (IOException | ClassNotFoundException | InterruptedException e) {
                             e.printStackTrace();
                         }
                         connection.setReceivedData(null);
@@ -42,39 +51,44 @@ public class Client {
         connection.send(msg + "#" + name);
     }
 
-    public void parse(String message) throws IOException, ClassNotFoundException {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
+    public void parse(String message) throws IOException, ClassNotFoundException, InterruptedException {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
         StringTokenizer st = new StringTokenizer(message, ";");
         String source = st.nextToken();
         String code = st.nextToken();
         String msg = st.nextToken();
         switch(code){
-
-
-            case "23":
-                vypis+="Špatné údaje!\n";                   // další kódy, které obsahují různé chybové hlášky
-                System.out.println("Špatné údaje!");
+            case "authSucc":
+                vypis=msg;
+                System.out.println("Úspěšné přihlášení");
+                isAuthorized = true;
+                newVypis = true;
                 break;
 
-
-            case "27":
-                setVypis("Jméno není v seznamu voličů!\n");
-                System.out.println("Jméno není v seznamu voličů!");
+            case "authFail":
+                vypis=msg;
+                System.out.println("Neúspěšné přihlášení: " + msg);
+                isAuthorized = false;
+                newVypis = true;
                 break;
-            case "28":
-                setVypis("Už máte klíče!\n");
-                System.out.println("Už máte klíče!!");
+            case "files":
+                vypis+="Recieved new files.";
+                newFiles = (File[]) deserialize(msg);
                 break;
-            case "31":                                              // při přijetí kódu 31 se provede validaci blockchainu
-                vypis+="Blockchain přijat!\n";
-                System.out.println("Blockchain received");
-                LinkedList<Block> blocks = (LinkedList<Block>) deserialize(msg);
-
-
-            case "32":
-                System.out.println("Transaction received: " + msg);
+            case "blockrequest":
+                Thread.sleep((long)Math.random()*2000);
+                send("blockresponse;"+serialize(blockchain),source);
+                break;
+            case "blockresponse":
+                chains.add((Blockchain) deserialize(msg));
+                break;
+            case "newblock":
+                newBlockchain = (Blockchain) deserialize(msg);
+                System.out.println(source + " sent a new block. Validating.");
+                newBlock=true;
                 break;
             default:
                 System.out.println("Unknown message.");
+                newVypis = true;
         }
     }
 
@@ -82,7 +96,11 @@ public class Client {
         this.vypis = vypis;
     }
 
-    private static String serialize(Serializable o) throws IOException {            // serializace objektů do Stringu pro přenos
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
+    }
+
+    public static String serialize(Serializable o) throws IOException {            // serializace objektů do Stringu pro přenos
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(o);

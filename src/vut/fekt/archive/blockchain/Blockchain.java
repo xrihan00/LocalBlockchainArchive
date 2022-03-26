@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.Random;
 
 public class Blockchain implements Serializable {
+
     LinkedList<Block> blocks;           // linkedlist bloků
     Crypto crypto= new Crypto();
 
@@ -36,6 +37,9 @@ public class Blockchain implements Serializable {
 
     public LinkedList<Block> getBlocks() {
         return blocks;
+    }
+    public void setBlocks(LinkedList<Block> blocks) {
+        this.blocks = blocks;
     }
 
     @Override

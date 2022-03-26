@@ -1,6 +1,8 @@
 package vut.fekt.archive.blockchain;
 
 import java.io.*;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
 
@@ -109,6 +111,30 @@ public class Crypto implements Serializable {
         for (String file:f) {
             //s+=Crypto.getFileHash(folder.getAbsolutePath()+"/"+file);
             s+=Crypto.getFileHash(file);
+        }
+        return Crypto.getStringHash(s);
+    }
+
+    public static String getHashOfUrls(String[] f, String hostname, String folder) throws NoSuchAlgorithmException, IOException {
+        String s = "";
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        for (String file:f) {
+            URL path = new URL("http://"+hostname+"/"+folder+"/"+file);
+            InputStream in = path.openStream();
+            BufferedInputStream bis = new BufferedInputStream(in);
+            try (DigestInputStream dis = new DigestInputStream(bis, md)) {
+                while (dis.read() != -1) ; //empty loop to clear the data
+                md = dis.getMessageDigest();
+            }
+            // bytes to hex
+            StringBuilder result = new StringBuilder();
+            for (byte b : md.digest()) {
+                result.append(String.format("%02x", b));
+            }
+            //System.out.println(result);
+            s+=result;
+            in.close();
+            bis.close();
         }
         return Crypto.getStringHash(s);
     }
