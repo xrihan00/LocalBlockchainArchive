@@ -1,21 +1,25 @@
 package vut.fekt.archive;
 
+import edu.uci.ics.crawler4j.crawler.CrawlConfig;
+import edu.uci.ics.crawler4j.crawler.CrawlController;
+import edu.uci.ics.crawler4j.fetcher.PageFetcher;
+import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
+import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import vut.fekt.archive.blockchain.Crypto;
 
 import javax.swing.*;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.*;
+import org.netpreserve.jwarc.*;
 
 public class Server extends Thread {
     private JPanel panelserver;
@@ -83,6 +87,12 @@ public class Server extends Thread {
                                 if (newDocs.length != 0) {
                                     System.out.println("Document " + newDocs[0].getName());
                                     File dir = new File(newDocs[0].getAbsolutePath());
+                                    if(dir.getName().contains(",#,")){
+                                        String[] s = dir.getName().split(",#,");
+                                        String webUrl = s[1];
+                                        System.out.println("Website archive request for " + s[1]);
+
+                                    }
                                     if (dir.listFiles().length != 0) {
                                         System.out.println("I'm moving it here: " +archDir + "archive/" + newDocs[0].getName());
                                         File archiveDir = new File(archDir + "archive/" + newDocs[0].getName());
@@ -103,6 +113,43 @@ public class Server extends Thread {
             }
         });
         filethread.start();
+    }
+
+    private static String saveSite(String[] s){
+        String id = s[0];
+        String url = s[1];
+        try {
+            crawl(archDir+"archive/"+ id,url);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return id;
+
+    }
+
+    public static void crawl(String folder, String url) throws Exception {
+        String crawlStorageFolder = folder;
+        int numberOfCrawlers = 5;
+
+        CrawlConfig config = new CrawlConfig();
+        config.setIncludeHttpsPages(true);
+        config.setCrawlStorageFolder(crawlStorageFolder);
+
+        // Instantiate the controller for this crawl.
+        PageFetcher pageFetcher = new PageFetcher(config);
+        RobotstxtConfig robotstxtConfig = new RobotstxtConfig();
+        RobotstxtServer robotstxtServer = new RobotstxtServer(robotstxtConfig, pageFetcher);
+        CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
+
+        // For each crawl, you need to add some seed urls. These are the first
+        // URLs that are fetched and then the crawler starts following links
+        // which are found in these pages
+        controller.addSeed(url);
+
+        // Start the crawl. This is a blocking operation, meaning that your code
+        // will reach the line after this only when crawling is finished.
+        controller.start(Crawler.class, numberOfCrawlers);
+
     }
 
     private static String createJsonAndRename(File dir) throws IOException {

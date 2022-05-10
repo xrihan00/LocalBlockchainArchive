@@ -3,18 +3,22 @@ package vut.fekt.archive;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 
+import edu.uci.ics.crawler4j.crawler.CrawlConfig;
+import edu.uci.ics.crawler4j.crawler.CrawlController;
+import edu.uci.ics.crawler4j.fetcher.PageFetcher;
+import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
+import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import org.junit.Test;
 import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
 
 import static org.junit.Assert.assertEquals;
+
 
 
 public class TestClass {
@@ -49,10 +53,36 @@ public class TestClass {
     public void fileTest(){
         try {
             Files.move(Path.of("D:\\Archiv\\Upload\\upload-api\\archive\\asfasf\\"),Path.of("C:\\Programy\\Xampp\\htdocs\\archive\\asfasf\\"));
-            Files.
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void crawlTest() throws Exception {
+        String crawlStorageFolder = "C:/Crawler/";
+        int numberOfCrawlers = 5;
+
+        CrawlConfig config = new CrawlConfig();
+        config.setIncludeHttpsPages(true);
+        config.setCrawlStorageFolder(crawlStorageFolder);
+        config.setMaxPagesToFetch(50);
+        config.setPolitenessDelay(500);
+        // Instantiate the controller for this crawl.
+        PageFetcher pageFetcher = new PageFetcher(config);
+        RobotstxtConfig robotstxtConfig = new RobotstxtConfig();
+        RobotstxtServer robotstxtServer = new RobotstxtServer(robotstxtConfig, pageFetcher);
+        CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
+
+        // For each crawl, you need to add some seed urls. These are the first
+        // URLs that are fetched and then the crawler starts following links
+        // which are found in these pages
+        controller.addSeed("https://www.signia.cz");
+
+        // Start the crawl. This is a blocking operation, meaning that your code
+        // will reach the line after this only when crawling is finished.
+        controller.start(Crawler.class, numberOfCrawlers);
+
     }
 
     @Test
