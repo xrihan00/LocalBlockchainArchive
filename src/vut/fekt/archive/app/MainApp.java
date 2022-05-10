@@ -1,7 +1,5 @@
 package vut.fekt.archive.app;
 
-import org.xml.sax.SAXException;
-import vut.fekt.archive.Archive;
 import vut.fekt.archive.ArchiveDocument;
 import vut.fekt.archive.BlockchainValidator;
 import vut.fekt.archive.blockchain.Block;
@@ -9,24 +7,13 @@ import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.KeyPair;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 //hlavní okno aplikace
@@ -48,7 +35,6 @@ public class MainApp extends JFrame {
     private JTextField passwordField;
     private JButton connectButton;
     private JButton authButton;
-    private JCheckBox blockCheckBox;
 
     private KeyPair keyPair;
     private Map<String, ArchiveDocument> documentTimeMap = new HashMap<>();
@@ -91,19 +77,31 @@ public class MainApp extends JFrame {
         connectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                if(client!=null) {
+                    try {
+                        client.send("End", "server");
+                        client.connection = null;
+                        client = null;
+                        Thread.sleep(100);
+                    } catch (InterruptedException interruptedException) {
+                        interruptedException.printStackTrace();
+                    }
+                }
                 if (urlField.getText().isEmpty()) {
-                    vypis.setText(vypis.getText() + "Vyplňte URL/IP adresu archivu\n");
+                    vypis.setText("Vyplňte URL/IP adresu archivu");
                 } else {
                     client = new Client();
                     try {
                         client.createConnection(urlField.getText());
                         url = urlField.getText();
-                        vypis.setText(vypis.getText() + "Připojení úspěšné\n");
-                        newBlockThread();
+                        vypis.setText("Připojení úspěšné");
+                        getBlockchainsAndSetMostCommon();
+                       // newBlockThread();
                     } catch (IOException connecteexc) {
-                        vypis.setText(vypis.getText() + "Připojení neúspěšné!\n");
+                        vypis.setText("Připojení neúspěšné!");
                         connecteexc.printStackTrace();
+                    } catch (Exception exception) {
+                        vypis.setText("Problém se získáním blockchainu.");
                     }
                 }
             }
@@ -111,11 +109,14 @@ public class MainApp extends JFrame {
         authButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(client==null){
+                    vypis.setText("Chybí spojení se serverem");
+                }
                 if (usernameField.getText().isEmpty()) {
-                    vypis.setText(vypis.getText() + "Vyplňte jméno\n");
+                    vypis.setText("Vyplňte jméno");
                 }
                 if (passwordField.getText().isEmpty()) {
-                    vypis.setText(vypis.getText() + "Vyplňte heslo\n");
+                    vypis.setText("Vyplňte heslo");
                 } else {
                     try {
                         client.send("auth;" + usernameField.getText() + ":" + passwordField.getText(), "server");
@@ -125,6 +126,29 @@ public class MainApp extends JFrame {
                 }
             }
         });
+        /*saveBlockchainButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    blockchain =Crypto.loadBlockchain(new File("C:\\Programy\\Xampp\\htdocs\\blockchain.txt"));
+                    client.blockchain = blockchain;
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                } catch (ClassNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });*/
+        /*       requestBlockchainButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    getBlockchainsAndSetMostCommon();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });*/
     }
 
     //inicializace framu
@@ -136,19 +160,34 @@ public class MainApp extends JFrame {
         frame.setContentPane(this.panel1);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setBounds(100, 100, 500, 500);
-        frame.setSize(500, 500);
+        frame.setSize(750, 900);
+        try{
+            loadArchiveBlockchain();
+            setVypis("Načten blockchain");
+            loadKeyPair();
+            setVypis("Načteny klíče");
+        }
+        catch (IOException ioe){
+            System.out.println("Nenašel jsem serializované verze blockchainu a klíčů");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
         frame.addWindowListener(new WindowListener() {
             //při zavírání okna je odeslána zpráva k odhlášení od serveru
             @Override
             public void windowClosing(WindowEvent e) {
                 if(client!=null) {
                     try {
+                        saveArchiveBlockchain();
+                        saveKeyPair();
                         client.send("End", "server");
                         Thread.sleep(100);
-                    } catch (InterruptedException interruptedException) {
+                    } catch (InterruptedException | IOException interruptedException) {
                         interruptedException.printStackTrace();
                     }
                 }
+
             }
             @Override
             public void windowOpened(WindowEvent e) {}
@@ -163,7 +202,7 @@ public class MainApp extends JFrame {
             @Override
             public void windowDeactivated(WindowEvent e) {}
         });
-        clientThred();
+        clientThread();
 
     }
 
@@ -172,11 +211,11 @@ public class MainApp extends JFrame {
     }
 
     public void setVypis(String s) {
-        vypis.setText(s);
+        vypis.setText(vypis.getText()+"\n"+s);
     }
 
-    public void clientThred() {
-        Thread vypisThread = new Thread(new Runnable() {
+    public void clientThread() {
+        Thread clientThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
@@ -185,12 +224,21 @@ public class MainApp extends JFrame {
                         if (client != null) {
                             isAuthorized = client.isAuthorized;
                             if (client.newVypis) {
-                                setVypis(vypis.getText() + "\n" + client.vypis);
+                                setVypis(client.vypis);
                                 client.newVypis = false;
                             }
+                            if(client.newFiles!=null){
+                                setVypis("Nové archiválie přidány");
+                                getBlockchainsAndSetMostCommon();
+                                blockchain.addBlock(createBlock(client.newFiles,client.newDoc));
+                                client.setBlockchain(blockchain);
+                                client.newFiles=null;
+                                client.send("newblock;" + client.serialize(blockchain), "broadcast");
+                            }
                             if(client.newBlock){
-                                validateNewBlock(client.newBlockchain);
                                 client.newBlock=false;
+                                validateNewBlock(client.newBlockchain);
+                                client.setBlockchain(blockchain);
                             }
                         }
                     } catch (InterruptedException e) {
@@ -202,53 +250,19 @@ public class MainApp extends JFrame {
                 }
             }
         });
-        vypisThread.start();
+        clientThread.start();
     }
 
-    public void newBlockThread(){
-        Thread blockThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true){
-                    try {
-                        Thread.sleep(1000);
-                        String folder = url;
-                        if (folder != null && isAuthorized == true && blockCheckBox.isSelected()) {
-                            URL path = new URL("http://"+folder + "/documents.txt");
-                            InputStream in = path.openStream();
-                            String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                            if(!text.isEmpty()) {
-                                System.out.println(text);
-                                in.close();
-                                String[] docs = text.split(",");
-                                try {
-                                    getBlockchainsAndSetMostCommon();
-                                } catch (Exception e) {
-                                }
-                                client.send("files;" + docs[0], "server");
-                                Thread.sleep(200);
-                                blockchain.addBlock(createBlock(client.newFiles, docs[0]));
-                                client.setBlockchain(blockchain);
-                                client.send("newblock;" + client.serialize(blockchain), "broadcast");
-                            }
-                        }
-                        Thread.sleep(25000);
-                    } catch (Exception eee) {
-                        eee.printStackTrace();
-                    }
-                }
-            }
-        });
-        blockThread.start();
-    }
+
 
     public Block createBlock(File[] files, String docId) throws Exception {
+
         String meta = null;
         ArrayList<String> contentNames = new ArrayList<>();
 
         for (File f : files) {
-            String mimeType = Files.probeContentType(f.toPath());
-            if (f.getName().contains("metadata.xml")) {
+           // String mimeType = Files.probeContentType(f.toPath());
+            if (f.getName().contains("metadata.json")) {
                 //meta = "http://"+url+"/"+docId+"/"+f.getName();
                 meta = f.getName();
             } else {
@@ -257,34 +271,87 @@ public class MainApp extends JFrame {
         }
         String hash = Crypto.getHashOfUrls(contentNames.toArray(new String[0]),url,docId);
         Block block = new Block(contentNames.toArray(new String[0]), meta, blockchain.getBlocks().size(), docId, Crypto.sign(hash.getBytes(StandardCharsets.UTF_8), keyPair.getPrivate()), keyPair.getPublic(), hash);
+        setVypis("Nový blok vytvořen a přidán");
         return block;
     }
 
     public void validateNewBlock(Blockchain newBlock) throws Exception {
         BlockchainValidator bv = new BlockchainValidator(blockchain,url);
-        if(bv.validateNewBlock(newBlock)){
-            blockchain.addBlock(newBlock.getBlocks().getLast());
+        if(bv.containsBlock(newBlock.getBlocks().getLast())){
+            System.out.println("Blockchain already contains this block.");
+            return;
         }
-        else System.out.println("Recieved invalid block");
+        else if(bv.validateNewBlock(newBlock)){
+            System.out.println("Adding a new block");
+            blockchain.addRecievedBlock(newBlock.getBlocks().getLast());
+        }
+        else System.out.println("Recieved invalid block: \n" + bv.getDetailedLog());
         //vypis.setText(bv.getDetailedLog());
     }
 
     public void getBlockchainsAndSetMostCommon() throws Exception {
         client.send("blockrequest;"+"I need blocks","broadcast");
+        setVypis("Žádost o blockchainy odeslána");
         Thread.sleep(2000);
         ArrayList<Blockchain> chains = client.chains;
+        if(chains.isEmpty()){
+            System.out.println("Didn't receive any blockchains, using my own.");
+            return;
+        }
+        if(chains.size()==1){
+            System.out.println("Only received one blockchain, keeping mine.");
+        }
         HashMap<Blockchain,Integer> hashes = new HashMap<>();
+        System.out.println("Received " + chains.size() + " blockchains. Picking the most common one.");
         for (Blockchain b:chains) {
             BlockchainValidator bv = new BlockchainValidator(blockchain,url);
             if(bv.validateBlockHashes()){
                 String hash = b.getLastHash();
+                System.out.println(hash);
                 if(hashes.containsKey(hash)){
                     hashes.put(b,hashes.get(hash)+1);
                 }
                 else hashes.put(b,1);
             }
         }
+        if(hashes.isEmpty()){
+            System.out.println("No blockchains were valid");
+            return;
+        }
         Blockchain max = Collections.max(hashes.entrySet(), Map.Entry.comparingByValue()).getKey();
+        System.out.println("Last hash of the winning blockchain: " + max.getLastHash());
+        setVypis("Vybrán nejčastější blockchain");
         blockchain.setBlocks(max.getBlocks());
+        client.blockchain = blockchain;
+        client.chains.clear();
+    }
+    public void saveArchiveBlockchain() throws IOException {
+        FileOutputStream fos = new FileOutputStream(System.getProperty("user.dir")+"/blockchain.txt");
+        fos.write(blockchain.toString().getBytes(StandardCharsets.UTF_8));
+        fos = new FileOutputStream(new File(System.getProperty("user.dir")+"/serializedBlockchain.txt"));
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(blockchain);
+        oos.close();
+        fos.close();
+    }
+    public void saveKeyPair() throws IOException {
+        FileOutputStream fos = new FileOutputStream(System.getProperty("user.dir")+"/KeyPair.txt");
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(keyPair);
+        oos.close();
+        fos.close();
+    }
+
+    //načtení serializovaného blockchainu
+    public void loadArchiveBlockchain() throws IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream(System.getProperty("user.dir")+"/serializedBlockchain.txt");
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        blockchain = (Blockchain) ois.readObject();
+    }
+    //načtení serializovaných klíčů
+    public void loadKeyPair() throws IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream(System.getProperty("user.dir")+"/KeyPair.txt");
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        keyPair = (KeyPair) ois.readObject();
     }
 }

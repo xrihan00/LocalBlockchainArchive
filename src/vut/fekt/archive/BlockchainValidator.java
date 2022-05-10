@@ -4,9 +4,7 @@ import vut.fekt.archive.blockchain.Block;
 import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -37,7 +35,7 @@ public class BlockchainValidator {
         }
         //validace hashe předchozího bloku
         if(!newBlock.getPreviousHash().equals(secondToLastHash)){
-            detailedLog ="\nHodnota \"Previous Hash\" = " + newBlock.getPreviousHash() + "\nměla by být " + secondToLastHash;
+            detailedLog +="\nHodnota \"Previous Hash\" = " + newBlock.getPreviousHash() + "\nměla by být " + secondToLastHash;
             resultString = "Blockchain not valid!";
             integrity = false;
             result = false;
@@ -57,9 +55,8 @@ public class BlockchainValidator {
             result = false;
         }
         //validace kompatiblity
-        blockchain.addBlock(newBlock);
-        if(!validateBlockHashes()){
-            detailedLog += "\nNový blok není kompatibiní.";
+        if(!newBlock.getPreviousHash().equals(blockchain.getLastHash())){
+            detailedLog += "\nNový blok není kompatibiní.\nPrevious hash: "+ newBlock.getPreviousHash()+"\nLast hash: "+blockchain.getLastHash();
             integrity = false;
             result = false;
         }
@@ -85,7 +82,7 @@ public class BlockchainValidator {
             detailedLog+="\nDokument " + block.getDocName() + "\n";
             //ověření zda sedí hash předchozího bloku
             if (!block.getPreviousHash().equals(blockhash)) {
-                detailedLog ="\nHodnota \"Previous Hash\" = " + block.getPreviousHash() + "\nměla by být " + blockhash;
+                detailedLog +="\nHodnota \"Previous Hash\" = " + block.getPreviousHash() + "\nměla by být " + blockhash;
                 resultString = "Blockchain not valid!";
                 integrity = false;
                 result = false;
@@ -141,7 +138,7 @@ public class BlockchainValidator {
             }
             //ověření zda sedí hash předchozího bloku
             if (!block.getPreviousHash().equals(blockhash)) {
-                detailedLog ="\nHodnota \"Previous Hash\" = " + block.getPreviousHash() + "\nměla by být " + blockhash;
+                detailedLog +="\nHodnota \"Previous Hash\" = " + block.getPreviousHash() + "\nměla by být " + blockhash;
                 resultString = "Blockchain not valid!";
                 integrity = false;
                 result = false;
@@ -165,7 +162,12 @@ public class BlockchainValidator {
         }
         return result;
     }
-
+    public boolean containsBlock(Block block){
+        if(blockchain.getLastHash().equals(Crypto.blockHash(block))){
+            return true;
+        }
+        else return false;
+    }
 
     public String getResultString() {
         return resultString;

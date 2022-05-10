@@ -1,13 +1,11 @@
 package vut.fekt.archive.app;
 
 import vut.fekt.archive.Connection;
-import vut.fekt.archive.blockchain.Block;
 import vut.fekt.archive.blockchain.Blockchain;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.LinkedList;
 import java.util.StringTokenizer;
 
 public class Client {
@@ -16,9 +14,10 @@ public class Client {
     public boolean isAuthorized = false;
     public boolean newVypis = false;
     public boolean newBlock = false;
+    public String newDoc;
     public File[] newFiles = null;
     public Blockchain blockchain = null;
-    public ArrayList<Blockchain> chains = null;
+    public ArrayList<Blockchain> chains = new ArrayList<>();
     public Blockchain newBlockchain = null;
 
     public void createConnection(String url) throws IOException {                 // je vytvořeno spojení se serverem
@@ -52,6 +51,7 @@ public class Client {
     }
 
     public void parse(String message) throws IOException, ClassNotFoundException, InterruptedException {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
+        System.out.println("I recieved this: " +message);
         StringTokenizer st = new StringTokenizer(message, ";");
         String source = st.nextToken();
         String code = st.nextToken();
@@ -72,14 +72,23 @@ public class Client {
                 break;
             case "files":
                 vypis+="Recieved new files.";
-                newFiles = (File[]) deserialize(msg);
+                System.out.println("Recieved new files");
+                String[] desmsg = msg.split(",");
+                newFiles = (File[]) deserialize(desmsg[0]);
+                newDoc = desmsg[1];
                 break;
             case "blockrequest":
-                Thread.sleep((long)Math.random()*2000);
+                if(blockchain==null){
+                    System.out.println("Blockchain is null, not sennding it.");
+                    break;
+                }
+                Thread.sleep((long)Math.random()*1500);
                 send("blockresponse;"+serialize(blockchain),source);
                 break;
             case "blockresponse":
-                chains.add((Blockchain) deserialize(msg));
+                Blockchain newchain = (Blockchain) deserialize(msg);
+                System.out.println("Got this blockchain: " + newchain.getLastHash());
+                chains.add(newchain);
                 break;
             case "newblock":
                 newBlockchain = (Blockchain) deserialize(msg);

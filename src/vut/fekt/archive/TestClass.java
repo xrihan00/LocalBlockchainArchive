@@ -3,14 +3,14 @@ package vut.fekt.archive;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 
 import org.junit.Test;
-import vut.fekt.archive.blockchain.Block;
 import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
 
@@ -45,6 +45,15 @@ public class TestClass {
         assertEquals(hash1, hash2);
     }
 
+    @Test
+    public void fileTest(){
+        try {
+            Files.move(Path.of("D:\\Archiv\\Upload\\upload-api\\archive\\asfasf\\"),Path.of("C:\\Programy\\Xampp\\htdocs\\archive\\asfasf\\"));
+            Files.
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Test
     public void parseTest() throws Exception {

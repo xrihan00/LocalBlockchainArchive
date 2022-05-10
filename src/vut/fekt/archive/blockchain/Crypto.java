@@ -2,7 +2,6 @@ package vut.fekt.archive.blockchain;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
 
@@ -20,10 +19,16 @@ public class Crypto implements Serializable {
         return pair;
     }
 
-    public KeyPair loadKeyPair(File file) throws IOException, ClassNotFoundException {
+    public static Blockchain loadBlockchain(File file) throws IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream(file);
         ObjectInputStream ois = new ObjectInputStream(fis);
-        return (KeyPair) ois.readObject();
+        return (Blockchain) ois.readObject();
+    }
+
+    public static void saveBlockchain(Blockchain blockchain, File file) throws IOException, ClassNotFoundException {
+        FileOutputStream fos = new FileOutputStream(file);
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(blockchain);
     }
 
     //podepíše byte[] soukormým RSA klíčem
@@ -53,7 +58,6 @@ public class Crypto implements Serializable {
         String s = block.getPreviousHash()+
                 block.getSignature()+
                 block.getPubKey()+
-                block.getFilepath()+
                 block.getMetapath()+
                 block.getBlockId()+
                 block.getTimeStamp();
@@ -119,7 +123,7 @@ public class Crypto implements Serializable {
         String s = "";
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         for (String file:f) {
-            URL path = new URL("http://"+hostname+"/"+folder+"/"+file);
+            URL path = new URL("http://"+hostname+"/archive/"+folder+"/"+file);
             InputStream in = path.openStream();
             BufferedInputStream bis = new BufferedInputStream(in);
             try (DigestInputStream dis = new DigestInputStream(bis, md)) {
@@ -137,5 +141,26 @@ public class Crypto implements Serializable {
             bis.close();
         }
         return Crypto.getStringHash(s);
+    }
+
+    public static String serialize(Serializable o) throws IOException {            // serializace objektů do Stringu pro přenos
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(o);
+        oos.close();
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
+
+    public static Object deserialize(String s)   {                                  // u přijatých dat se provede deserializace - dekódování
+        Object o = null;
+        try {
+            byte[] data = Base64.getDecoder().decode(s);
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+            o = ois.readObject();
+            ois.close();
+        } catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
+        return o;
     }
 }

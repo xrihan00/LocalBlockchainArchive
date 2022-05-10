@@ -1,9 +1,7 @@
 package vut.fekt.archive.blockchain;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 
@@ -66,6 +64,7 @@ public class Block implements Serializable {
         return new File(filepath[0]).getName();
     }
     public String[] getFilepath() {
+
         return filepath;
     }
     public String getMetapath() {
@@ -88,7 +87,10 @@ public class Block implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("\nPředchozí hash: " + previousHash);
-        sb.append("\nCesta k souboru: " + filepath);
+        sb.append("\nSoubory obsahu: ");
+        for (String file:filepath) {
+            sb.append("\n"+file);
+        }
         sb.append("\nMetadata: " + metapath);
         sb.append("\nHash souboru: " + filehash);
         sb.append("\nDigitální podpis: " +getSignature());
