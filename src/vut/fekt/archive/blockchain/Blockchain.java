@@ -29,6 +29,10 @@ public class Blockchain implements Serializable {
         blocks.add(block);
     }
 
+    public void addRecievedBlock(Block block){
+        blocks.add(block);
+    }
+
     //nahodne vygenerovane Id
     public int randomId(){
         Random rng = new Random();

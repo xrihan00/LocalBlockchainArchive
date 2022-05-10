@@ -9,13 +9,15 @@ public class Connection{
     private int port = 2021;
     private String receivedData;
     private DataOutputStream dos;
+    Socket socket;
+    DataInputStream dis;
 
     public void initialize(String url) throws IOException{                    // inicializace pro vytvoření komunikace - connection
         Scanner sc = new Scanner(System.in);
 
         InetAddress ip = InetAddress.getByName(url);
-        Socket socket= new Socket(ip,port);
-        DataInputStream dis = new DataInputStream((socket.getInputStream()));           // vytvoření dataInputStream pro příchozí komunikaci
+        socket = new Socket(ip,port);
+        dis = new DataInputStream((socket.getInputStream()));           // vytvoření dataInputStream pro příchozí komunikaci
         this.dos = new DataOutputStream(socket.getOutputStream());
 
         Thread read = new Thread(new Runnable() {                                       // vytvoření nového vlákna, které kontroluje zda jsou nějaké nové příchozí zprávy
@@ -25,6 +27,8 @@ public class Connection{
                     try {
                         String msg = dis.readUTF();
                         receivedData = msg;                                             // když je obdržena nová zpráva, tak se předá do promenné receiveData
+                    } catch (EOFException ee){
+                        return;
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -45,6 +49,14 @@ public class Connection{
         try {
             dos.writeUTF(msg);                                                                       // do dataOutputStream se předá požadovaná zpráva k odeslání
             System.out.println("I sent this: "+msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void end(){
+        try {
+            socket.close();
+            dis.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

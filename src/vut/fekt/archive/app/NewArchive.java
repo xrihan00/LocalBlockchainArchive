@@ -3,7 +3,6 @@ package vut.fekt.archive.app;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 
 public class NewArchive extends JFrame {
     private JTextField archiveName;
