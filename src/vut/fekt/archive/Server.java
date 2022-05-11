@@ -5,6 +5,7 @@ import edu.uci.ics.crawler4j.crawler.CrawlController;
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
+import org.apache.commons.io.FileUtils;
 import vut.fekt.archive.blockchain.Crypto;
 
 import javax.swing.*;
@@ -14,12 +15,14 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.*;
-import org.netpreserve.jwarc.*;
+import vut.fekt.archive.blockchain.CryptoException;
 
 public class Server extends Thread {
     private JPanel panelserver;
@@ -27,10 +30,12 @@ public class Server extends Thread {
     //kam spadají uploady z webu
     public static String rootDir = "D:/Archiv/Upload/upload-api/";
     //kam se bude archivovat - kde běží apache
-    public static String archDir = "C:/Programy/Xampp/htdocs/";
+    public static String archDir = "C:/Programy/Xampp/htdocs/archive/";
     static Vector<ClientHandler> ar = new Vector<>();
+    static Vector<String> connectedUsers = new Vector<>();
     static int i = 0;
     static HashMap<String, String> secrets = new HashMap<>();
+    public static ArrayList<PublicKey> legitKeys = new ArrayList<java.security.PublicKey>();
 
     public static void main(String[] args) throws Exception {               // metóda main na spuštění aplikácie Server
         JFrame frame = new JFrame("Server");                            // GUI pre aplikáciu Server
@@ -41,6 +46,12 @@ public class Server extends Thread {
         frame.setBounds(100, 100, 300, 100);
 
         loadSecrets();
+        try {
+            loadKeys();
+        }
+        catch (IOException e){
+            System.out.println("No keys found");
+        }
         newDocumentThread();
 
         ServerSocket serverSocket = new ServerSocket(2021);             // vytvorenie Socketu pre Server, potom vytvorenie triedy Client Handler v novom vlákne
@@ -73,6 +84,14 @@ public class Server extends Thread {
         }
     }
 
+    //načtení serializovaných klíčů
+    public static void loadKeys() throws IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream(System.getProperty("user.dir")+"/keys.txt");
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        String serialized = (String) ois.readObject();
+        legitKeys = (ArrayList<PublicKey>) Crypto.deserialize(serialized);
+    }
+
     private static void newDocumentThread() throws Exception {
         Thread filethread = new Thread(new Runnable() {
             @Override
@@ -80,7 +99,7 @@ public class Server extends Thread {
                 while (true) {
                         try {
                             Thread.sleep(5000);
-                            if (checkIfClientsConnectedAndAuthorized()) {
+                            if (checkIfClientsConnectedAndRemove()) {
                                 File uploadDir = new File(rootDir + "uploads");
                                 Charset charset = StandardCharsets.UTF_8;
                                 File[] newDocs = uploadDir.listFiles();
@@ -94,9 +113,9 @@ public class Server extends Thread {
 
                                     }
                                     if (dir.listFiles().length != 0) {
-                                        System.out.println("I'm moving it here: " +archDir + "archive/" + newDocs[0].getName());
-                                        File archiveDir = new File(archDir + "archive/" + newDocs[0].getName());
-                                        Files.move(dir.toPath(), archiveDir.toPath());
+                                        System.out.println("I'm moving it here: " +archDir + newDocs[0].getName());
+                                        File archiveDir = new File(archDir +  newDocs[0].getName());
+                                        FileUtils.moveToDirectory(dir, new File(archDir),true);
                                         String id = createJsonAndRename(archiveDir);
                                         File[] files = archiveDir.listFiles();
                                         String serializedFiles = Crypto.serialize(files);
@@ -104,10 +123,10 @@ public class Server extends Thread {
                                     }
                                 }
                             }
-                        } catch (InterruptedException | MalformedURLException e) {
+                        } catch (InterruptedException | IOException | CryptoException e) {
                             e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        } catch (ConcurrentModificationException e){
+                            System.out.println("Concurrent modification exception, moving on.");
                         }
                 }
             }
@@ -152,7 +171,7 @@ public class Server extends Thread {
 
     }
 
-    private static String createJsonAndRename(File dir) throws IOException {
+    private static String createJsonAndRename(File dir) throws IOException, CryptoException {
         String id = dir.getName();
         File[] files = dir.listFiles();
         String s = files[0].getName();
@@ -161,13 +180,27 @@ public class Server extends Thread {
         //System.out.println(str.length);
         String docname = str[0];
         String username = str[1];
+        String password = "";
+        Boolean encrypt = Boolean.valueOf(str[2]);
+        if(encrypt){
+            password = str[3];
+        }
         SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date = new Date(System.currentTimeMillis());
         ArrayList<String> filenames = new ArrayList<>();
         for (File f:files) {
             String[] ss = f.getName().split("\\.");
-            filenames.add(ss[2]+"."+ss[3]);
-            Files.move(Path.of(f.getAbsolutePath()),Path.of(dir.getAbsolutePath()+"/"+ss[2]+"."+ss[3]));
+            if(encrypt) {
+                String filename =ss[4] + "." + ss[5];
+                filenames.add(filename);
+                Crypto.encrypt(password,f, new File(dir.getAbsolutePath() + "/" + filename),id);
+                f.delete();
+                //Files.move(Path.of(f.getAbsolutePath()),Path.of(dir.getAbsolutePath()+"/"+ss[4]+"."+ss[5]));
+            }
+            else if(!encrypt){
+                filenames.add(ss[3] + "." + ss[4]);
+                Files.move(Path.of(f.getAbsolutePath()), Path.of(dir.getAbsolutePath() + "/" + ss[3] + "." + ss[4]));
+            }
         }
         JSONObject obj=new JSONObject();
         obj.put("author",username);
@@ -175,6 +208,7 @@ public class Server extends Thread {
         obj.put("docName",docname);
         obj.put("id",id);
         obj.put("files",filenames);
+        obj.put("encrypted",encrypt);
         System.out.print(obj.toString());
         FileOutputStream fos = new FileOutputStream(dir.getAbsolutePath()+"/metadata.json");
         fos.write(obj.toString().getBytes(StandardCharsets.UTF_8));
@@ -193,24 +227,32 @@ public class Server extends Thread {
 
     }
 
-    private static boolean checkIfClientsConnectedAndAuthorized() {
+
+
+    private static boolean checkIfClientsConnectedAndRemove() {
         if (ar.isEmpty()) return false;
-        for (ClientHandler c : ar) {
-            if (c.disconnected == false || c.isAuthorized==true) return true;
+        Iterator<ClientHandler> iter = ar.iterator();
+        while(iter.hasNext()){
+            ClientHandler c = iter.next();
+            if(c.disconnected == true){
+                ar.remove(c);
+            }
         }
-        return false;
+        if (ar.isEmpty()) return false;
+        else return true;
     }
 
 }
 
 class ClientHandler implements Runnable {
-    private final String name;
+    final String name;
     final DataInputStream dis;          // vstupní data
     final DataOutputStream dos;         // výstupní data
     Socket socket;
     boolean isLogged;
     boolean isAdmin;
     public boolean isAuthorized;
+    public String username;
     public boolean disconnected;
     HashMap<String, String> secrets;
 
@@ -238,13 +280,15 @@ class ClientHandler implements Runnable {
                 System.out.println(this.name + " sent this: " + received);
                 while (received != null) {
 
-                    StringTokenizer st = new StringTokenizer(received, "#");        // rozdelí vstup na základe "#"
-                    String MsgToSend = st.nextToken();                                      // správa
-                    String recipient = st.nextToken();                                      // príjemca
+                    StringTokenizer st = new StringTokenizer(received, "#");
+                    String MsgToSend = st.nextToken();
+                    String recipient = st.nextToken();
 
 
                     if (MsgToSend.equals("End")) {
                         this.isLogged = false;
+                        this.isAuthorized=false;
+                        this.disconnected = true;
                         this.dos.close();
                         this.dis.close();
                         this.socket.close();
@@ -260,8 +304,8 @@ class ClientHandler implements Runnable {
                     }
 
 
-                    for (ClientHandler mc : Server.ar) {                                    // preposielanie správ
-                        if (mc.name.equals(recipient) && mc.isLogged == true) {             //pošle zprávu zadanému příjemci
+                    for (ClientHandler mc : Server.ar) {
+                        if (mc.name.equals(recipient) && mc.isLogged == true) {
                             mc.dos.writeUTF(this.name + ";" + MsgToSend);
                             received = null;
                             break;
@@ -276,13 +320,13 @@ class ClientHandler implements Runnable {
                 System.out.println("Unexpected disconnect");
                 disconnected = true;
                 return;
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public String[] parse(String message) throws IOException, ClassNotFoundException {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
+    public String[] parse(String message) throws Exception {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
         StringTokenizer st = new StringTokenizer(message, ";");
         String[] result = {null, null};
         String code = st.nextToken();
@@ -308,20 +352,49 @@ class ClientHandler implements Runnable {
                 content = content.replaceAll(directory + ",", "");
                 Files.write(path, content.getBytes(charset));
                 break;
+            case "keys":
+                result[0] = "keys";
+                if(isAuthorized){
+                    genKeysAndSend(this);
+                    result[1] = "Keys generated and sent";
+                }
+                else result[1] = "Not authorized to recieve keys";
+                break;
         }
         return result;
     }
 
-    private String authenticate(String username, String pass) {
+    private static void genKeysAndSend(ClientHandler cl) throws Exception {
+        KeyPair keys = Crypto.generateKeyPair();
+        System.out.println("Generated key pair");
+        String serializedPair = Crypto.serialize(keys);
+        cl.sendMsg("keypair;"+serializedPair);
+        System.out.println("Sent client "+cl.name+" his key pair");
+        Server.legitKeys.add(keys.getPublic());
+        String serializedKeyArray = Crypto.serialize(Server.legitKeys);
+        saveKeys(serializedKeyArray);
+        Thread.sleep(50);
+        for (ClientHandler c:Server.ar) {
+                c.sendMsg("pubkey;"+serializedKeyArray);
+                System.out.println("Sent client "+c.name+" legitimate keys");
+
+        }
+        Thread.sleep(50);
+    }
+
+    private String authenticate(String username, String pass) throws NoSuchAlgorithmException {
         isAuthorized = false;
         System.out.println("Authenticaton - Username: " + username + " , Password: " + pass);
         if (!secrets.containsKey(username)) {
             return "Uživatel nenalezen";
-        } else if (!secrets.get(username).equals(pass)) {
+        } else if (Server.connectedUsers.contains(username)){
+            return "Uživatel je již přihlášen";
+        } else if (!secrets.get(username).equals(Crypto.getStringHash(pass))) {
             System.out.println("Correct password: " + secrets.get(username));
             return "Špatné heslo";
-        } else if (secrets.get(username).equals(pass)) {
+        } else if (secrets.get(username).equals(Crypto.getStringHash(pass))) {
             isAuthorized = true;
+            this.username = username;
             return "Přihlášení úspěšné";
         } else return "Autentizace byla neúspěšná";
     }
@@ -340,8 +413,14 @@ class ClientHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
-
+    public static void saveKeys(String keys) throws IOException {
+        FileOutputStream fos = new FileOutputStream(System.getProperty("user.dir")+"/keys.txt");
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(keys);
+        oos.close();
+        fos.close();
     }
 
 }

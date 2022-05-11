@@ -1,0 +1,32 @@
+<component name="libraryTable">
+  <library name="edu.uci.ics.crawler4j" type="repository">
+    <properties maven-id="edu.uci.ics:crawler4j:4.4.0" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/edu/uci/ics/crawler4j/4.4.0/crawler4j-4.4.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.22/slf4j-api-1.7.22.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/ch/qos/logback/logback-classic/1.1.7/logback-classic-1.1.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/ch/qos/logback/logback-core/1.1.7/logback-core-1.1.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/24.0-jre/guava-24.0-jre.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/code/findbugs/jsr305/1.3.9/jsr305-1.3.9.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/checkerframework/checker-compat-qual/2.0.0/checker-compat-qual-2.0.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/errorprone/error_prone_annotations/2.1.3/error_prone_annotations-2.1.3.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/j2objc/j2objc-annotations/1.1/j2objc-annotations-1.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/codehaus/mojo/animal-sniffer-annotations/1.14/animal-sniffer-annotations-1.14.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/httpcomponents/httpclient/4.5.3/httpclient-4.5.3.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/httpcomponents/httpcore/4.4.6/httpcore-4.4.6.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-logging/commons-logging/1.2/commons-logging-1.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.9/commons-codec-1.9.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/sleepycat/je/5.0.84/je-5.0.84.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/tika/tika-parsers/1.16/tika-parsers-1.16.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/tika/tika-core/1.16/tika-core-1.16.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/james/apache-mime4j-core/0.8.1/apache-mime4j-core-0.8.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/james/apache-mime4j-dom/0.8.1/apache-mime4j-dom-0.8.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.5/commons-io-2.5.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/jul-to-slf4j/1.7.24/jul-to-slf4j-1.7.24.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/jcl-over-slf4j/1.7.24/jcl-over-slf4j-1.7.24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

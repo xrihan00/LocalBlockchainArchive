@@ -1,13 +1,18 @@
 package vut.fekt.archive.blockchain;
 
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.net.URL;
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-//kryptograficke pomocne metody
 public class Crypto implements Serializable {
 
     //vygeneruje RSA veřejný/soukromý klíč
@@ -143,6 +148,92 @@ public class Crypto implements Serializable {
         return Crypto.getStringHash(s);
     }
 
+    private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
+    private static final String TRANSFORMATION = "AES";
+
+    public static void encrypt(String key, File inputFile, File outputFile, String salt)
+            throws CryptoException {
+        cryptoFile(Cipher.ENCRYPT_MODE, key, inputFile,outputFile,salt);
+    }
+
+    public static void decrypt(String key, File inputFile, File outputFile,String salt)
+            throws CryptoException {
+        cryptoFile(Cipher.DECRYPT_MODE, key, inputFile, outputFile,salt);
+    }
+
+    private static void doCrypto(int cipherMode, String key, File inputFile,
+                                 File outputFile) throws CryptoException {
+        try {
+            Key secretKey = new SecretKeySpec(key.getBytes(), ALGORITHM);
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            cipher.init(cipherMode, secretKey);
+
+            FileInputStream inputStream = new FileInputStream(inputFile);
+            byte[] inputBytes = new byte[(int) inputFile.length()];
+            inputStream.read(inputBytes);
+
+            byte[] outputBytes = cipher.doFinal(inputBytes);
+
+            FileOutputStream outputStream = new FileOutputStream(outputFile);
+            outputStream.write(outputBytes);
+
+            inputStream.close();
+            outputStream.close();
+
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException
+                | InvalidKeyException | BadPaddingException
+                | IllegalBlockSizeException | IOException ex) {
+            throw new CryptoException("Error encrypting/decrypting file", ex);
+        }
+    }
+
+    public static void cryptoFile(int cipherMode, String password, File inputFile, File outputFile,String salt) throws CryptoException {
+        try {
+            SecretKey key =getKeyFromPassword(password, salt);
+
+
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(cipherMode, key, generateIv());
+            FileInputStream inputStream = new FileInputStream(inputFile);
+            FileOutputStream outputStream = new FileOutputStream(outputFile);
+            byte[] buffer = new byte[64];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byte[] output = cipher.update(buffer, 0, bytesRead);
+                if (output != null) {
+                    outputStream.write(output);
+                }
+            }
+            byte[] outputBytes = cipher.doFinal();
+            if (outputBytes != null) {
+                outputStream.write(outputBytes);
+            }
+            inputStream.close();
+            outputStream.close();
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException
+                | InvalidKeyException | BadPaddingException
+                | IllegalBlockSizeException | IOException
+                |InvalidAlgorithmParameterException  | InvalidKeySpecException ex) {
+            throw new CryptoException("Error encrypting/decrypting file", ex);
+        }
+    }
+
+    public static SecretKey getKeyFromPassword(String password, String salt)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
+        SecretKey secret = new SecretKeySpec(factory.generateSecret(spec)
+                .getEncoded(), "AES");
+        return secret;
+    }
+
+    public static IvParameterSpec generateIv() {
+        String s1 = "1234567812345678";
+        byte[] bytes = s1.getBytes();
+        return new IvParameterSpec(bytes);
+    }
+
     public static String serialize(Serializable o) throws IOException {            // serializace objektů do Stringu pro přenos
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -164,3 +255,5 @@ public class Crypto implements Serializable {
         return o;
     }
 }
+//kryptograficke pomocne metody
+

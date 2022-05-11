@@ -7,15 +7,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.util.Vector;
 
 import edu.uci.ics.crawler4j.crawler.CrawlConfig;
 import edu.uci.ics.crawler4j.crawler.CrawlController;
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
+import vut.fekt.archive.blockchain.CryptoException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -50,9 +53,34 @@ public class TestClass {
     }
 
     @Test
+    public void hashPassTest() throws NoSuchAlgorithmException {
+        String[] pass = {"heslo1","heslo2","heslo3"};
+        Vector<String> hashes = new Vector<>();
+        for (String s:pass
+             ) {
+            hashes.add(Crypto.getStringHash(s));
+        }
+        System.out.println(hashes);
+    }
+
+    @Test
+    public void encryptTest(){
+        File orig = new File("D:\\Archiv\\_Archive2\\28917\\28917.jpg");
+        File encrypted = new File("D:\\Archiv\\_Archive2\\28917\\encrypted.jpg");
+        File decrypted = new File("D:\\Archiv\\_Archive2\\28917\\decrypted.jpg");
+        try {
+            Crypto.encrypt("heslo",orig,encrypted,orig.getName());
+            Crypto.decrypt("heslo",encrypted,decrypted,orig.getName());
+        } catch (CryptoException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    @Test
     public void fileTest(){
         try {
-            Files.move(Path.of("D:\\Archiv\\Upload\\upload-api\\archive\\asfasf\\"),Path.of("C:\\Programy\\Xampp\\htdocs\\archive\\asfasf\\"));
+            FileUtils.moveDirectoryToDirectory(new File("C:\\Programy\\Xampp\\htdocs\\archive\\asfasf\\"),new File("D:\\Archiv\\Upload\\upload-api\\archive\\asfasf\\"),true);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -14,6 +14,7 @@ import java.awt.event.WindowListener;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.*;
 
 //hlavní okno aplikace
@@ -37,6 +38,7 @@ public class MainApp extends JFrame {
     private JButton authButton;
 
     private KeyPair keyPair;
+    private ArrayList<PublicKey> publicKeys = new ArrayList<>();
     private Map<String, ArchiveDocument> documentTimeMap = new HashMap<>();
     private boolean isAuthorized = false;
     private String url=null;
@@ -62,7 +64,7 @@ public class MainApp extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // FileLabel.setText("Validating blockchain of archive " + archive.getName() + "...");
-                BlockchainValidator bv = new BlockchainValidator(blockchain,url);
+                BlockchainValidator bv = new BlockchainValidator(blockchain,url,publicKeys);
                 try {
                     bv.validateAll();
                 } catch (Exception ee) {
@@ -164,7 +166,6 @@ public class MainApp extends JFrame {
         try{
             loadArchiveBlockchain();
             setVypis("Načten blockchain");
-            loadKeyPair();
             setVypis("Načteny klíče");
         }
         catch (IOException ioe){
@@ -180,7 +181,6 @@ public class MainApp extends JFrame {
                 if(client!=null) {
                     try {
                         saveArchiveBlockchain();
-                        saveKeyPair();
                         client.send("End", "server");
                         Thread.sleep(100);
                     } catch (InterruptedException | IOException interruptedException) {
@@ -240,6 +240,16 @@ public class MainApp extends JFrame {
                                 validateNewBlock(client.newBlockchain);
                                 client.setBlockchain(blockchain);
                             }
+                            if(client.newKeys){
+                                publicKeys = client.keys;
+                                client.newKeys = false;
+                                setVypis("Seznam legitimních klíčů přidán");
+                            }
+                            if(client.newKeyPair){
+                                keyPair = client.keyPair;
+                                client.newKeyPair = false;
+                                setVypis("Klíče obdrženy");
+                            }
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -276,7 +286,7 @@ public class MainApp extends JFrame {
     }
 
     public void validateNewBlock(Blockchain newBlock) throws Exception {
-        BlockchainValidator bv = new BlockchainValidator(blockchain,url);
+        BlockchainValidator bv = new BlockchainValidator(blockchain,url, publicKeys);
         if(bv.containsBlock(newBlock.getBlocks().getLast())){
             System.out.println("Blockchain already contains this block.");
             return;
@@ -304,7 +314,7 @@ public class MainApp extends JFrame {
         HashMap<Blockchain,Integer> hashes = new HashMap<>();
         System.out.println("Received " + chains.size() + " blockchains. Picking the most common one.");
         for (Blockchain b:chains) {
-            BlockchainValidator bv = new BlockchainValidator(blockchain,url);
+            BlockchainValidator bv = new BlockchainValidator(blockchain,url, publicKeys);
             if(bv.validateBlockHashes()){
                 String hash = b.getLastHash();
                 System.out.println(hash);
@@ -334,24 +344,11 @@ public class MainApp extends JFrame {
         oos.close();
         fos.close();
     }
-    public void saveKeyPair() throws IOException {
-        FileOutputStream fos = new FileOutputStream(System.getProperty("user.dir")+"/KeyPair.txt");
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        oos.writeObject(keyPair);
-        oos.close();
-        fos.close();
-    }
 
     //načtení serializovaného blockchainu
     public void loadArchiveBlockchain() throws IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream(System.getProperty("user.dir")+"/serializedBlockchain.txt");
         ObjectInputStream ois = new ObjectInputStream(fis);
         blockchain = (Blockchain) ois.readObject();
-    }
-    //načtení serializovaných klíčů
-    public void loadKeyPair() throws IOException, ClassNotFoundException {
-        FileInputStream fis = new FileInputStream(System.getProperty("user.dir")+"/KeyPair.txt");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        keyPair = (KeyPair) ois.readObject();
     }
 }

@@ -13,7 +13,6 @@ public class ShowDocument extends JFrame{
     private JTextField timeField;
     private JButton openButton;
     private JTextField obsahField;
-    private JTextField versionField;
     private JTextField idField;
     private JPanel panel;
     private JButton novaVerzeButton;
@@ -35,15 +34,6 @@ public class ShowDocument extends JFrame{
                 }
             }
         });
-        //tlačítko Nová verze
-        //schova okno, boolean newVersion je true, což zachyti thread ve třídě App a spustí vytváření nové verze
-        novaVerzeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.setVisible(false);
-                newVersion = true;
-            }
-        });
     }
 
     public void init(ArchiveDocument document){
@@ -55,7 +45,6 @@ public class ShowDocument extends JFrame{
         timeField.setText(doc.getTimestamp());
         obsahField.setText(doc.getContentName());
         nazevField.setText(doc.getDocName());
-        versionField.setText(doc.getVersion());
         idField.setText(String.valueOf(doc.getId()));
 
         frame.pack();

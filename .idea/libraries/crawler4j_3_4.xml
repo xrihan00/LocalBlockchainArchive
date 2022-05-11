@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="crawler4j-3.4">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/src/resources/crawler4j-3.4.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

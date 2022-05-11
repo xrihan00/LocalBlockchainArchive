@@ -5,6 +5,7 @@ import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
 
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -13,13 +14,15 @@ public class BlockchainValidator {
     private String detailedLog="";
     private boolean integrity=true;
     private ArrayList<Block> invalidBlocks = new ArrayList();
+    private ArrayList<PublicKey> validPublicKeys = new ArrayList<>();
     private Blockchain blockchain;
     private String hostname;
 
     //validátor blockchainu
-    public BlockchainValidator(Blockchain blockchain, String hostname) {
+    public BlockchainValidator(Blockchain blockchain, String hostname, ArrayList<PublicKey> validPublicKeys ) {
         this.blockchain = blockchain;
         this.hostname = hostname;
+        this.validPublicKeys = validPublicKeys;
     }
 
     public boolean validateNewBlock(Blockchain chain) throws Exception {
@@ -47,6 +50,14 @@ public class BlockchainValidator {
             integrity = false;
             result = false;
         }
+        //validace platnosti klíče
+        boolean validKey = validPublicKeys.contains(newBlock.getPubKey());
+        if (!validKey) {
+            detailedLog += "\nVeřejný klíč:  " + newBlock.getPubKey() + "\nVEŘEJNÝ KLĆ NENÍ VALIDNÍ!";
+            integrity = false;
+            result = false;
+        }
+        //va
         //validace podpisu
         boolean signature = Crypto.verify(filehash.getBytes(StandardCharsets.UTF_8),newBlock.getSignature(),newBlock.getPubKey());
         if (!signature) {
@@ -127,6 +138,12 @@ public class BlockchainValidator {
                 detailedLog+=("\nHash je validní.");
             }
             //ověření validity podpisu
+            boolean validKey = validPublicKeys.contains(block.getPubKey());
+            if (!validKey) {
+                detailedLog += "\nVeřejný klíč:  " + block.getPubKey() + "\nVEŘEJNÝ KLĆ NENÍ VALIDNÍ!";
+                integrity = false;
+                result = false;
+            }
             boolean signature = Crypto.verify(filehash.getBytes(StandardCharsets.UTF_8),block.getSignature(),block.getPubKey());
             if (!signature) {
                 detailedLog += "\nPodpis:  " + block.getSignature() + "\nPODPIS NENÍ VALIDNÍ - INTEGRITA PORUŠENA!";
