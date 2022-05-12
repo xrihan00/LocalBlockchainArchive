@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -28,13 +29,16 @@ public class Server extends Thread {
     private JPanel panelserver;
     private JLabel label;
     //kam spadají uploady z webu
+    public static String secretsFile = "C:\\Diplomka\\LocalBlockchainArchive2\\secrets.txt";
     public static String rootDir = "D:/Archiv/Upload/upload-api/";
     //kam se bude archivovat - kde běží apache
     public static String archDir = "C:/Programy/Xampp/htdocs/archive/";
     static Vector<ClientHandler> ar = new Vector<>();
     static Vector<String> connectedUsers = new Vector<>();
+    static Vector<String> availableAdmin = new Vector<>();
     static int i = 0;
-    static HashMap<String, String> secrets = new HashMap<>();
+    static HashMap<String, String> admins = new HashMap<>();
+    static HashMap<String, String> users = new HashMap<>();
     public static ArrayList<PublicKey> legitKeys = new ArrayList<java.security.PublicKey>();
 
     public static void main(String[] args) throws Exception {               // metóda main na spuštění aplikácie Server
@@ -62,7 +66,7 @@ public class Server extends Thread {
 
             DataInputStream dis = new DataInputStream((socket.getInputStream()));       // vstupní data
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());      // výstupní data
-            ClientHandler clientHandler = new ClientHandler(socket, "client" + i, dis, dos, secrets);
+            ClientHandler clientHandler = new ClientHandler(socket, "client" + i, dis, dos, admins, users);
             Thread t = new Thread(clientHandler);
             System.out.println("Adding client" + i);
             ar.add(clientHandler);
@@ -74,14 +78,28 @@ public class Server extends Thread {
 
     private static void loadSecrets() throws IOException {
         //String path = System.getProperty("user.dir");
-        Path path = Path.of("D:/secrets.txt");
+        Path path = Path.of(secretsFile);
         String all = Files.readString(path);
         String[] pairs = all.split(";");
         for (String pair : pairs) {
             System.out.println(pair);
             String[] login = pair.split(":");
-            secrets.put(login[0], login[1]);
+            if(login[2].equals("admin")) {
+                admins.put(login[0], login[1]);
+            }if(login[2].equals("user")) {
+                users.put(login[0], login[1]);
+            }
         }
+    }
+
+    public static void addUser(String username, String password) throws IOException, NoSuchAlgorithmException {
+        Path path = Path.of(secretsFile);
+        String s = username +":"+Crypto.getStringHash(password)+":user;";
+        Files.write(
+                path,
+                s.getBytes(),
+                StandardOpenOption.APPEND);
+        loadSecrets();
     }
 
     //načtení serializovaných klíčů
@@ -103,7 +121,10 @@ public class Server extends Thread {
                                 File uploadDir = new File(rootDir + "uploads");
                                 Charset charset = StandardCharsets.UTF_8;
                                 File[] newDocs = uploadDir.listFiles();
-                                if (newDocs.length != 0) {
+                                if(newDocs == null){
+                                    System.out.println("Can't see the upload folder, something is wrong.");
+                                }
+                                else if (newDocs.length != 0) {
                                     System.out.println("Document " + newDocs[0].getName());
                                     File dir = new File(newDocs[0].getAbsolutePath());
                                     if(dir.getName().contains(",#,")){
@@ -223,11 +244,16 @@ public class Server extends Thread {
         int random = rng.nextInt(ar.size());
         ClientHandler client = ar.get(random);
         client.sendMsg("files;"+files + "," + docId);
+        client.isAvailable = false;
+        availableAdmin.remove(client.username);
         System.out.println("Sent files ");
 
     }
 
-
+    public static void deleteDoc(String docId) throws IOException {
+        String dir = archDir+docId;
+        Files.delete(Path.of(dir));
+    }
 
     private static boolean checkIfClientsConnectedAndRemove() {
         if (ar.isEmpty()) return false;
@@ -236,9 +262,10 @@ public class Server extends Thread {
             ClientHandler c = iter.next();
             if(c.disconnected == true){
                 ar.remove(c);
+                connectedUsers.remove(c.username);
             }
         }
-        if (ar.isEmpty()) return false;
+        if (ar.isEmpty()|| availableAdmin.isEmpty()) return false;
         else return true;
     }
 
@@ -252,13 +279,15 @@ class ClientHandler implements Runnable {
     boolean isLogged;
     boolean isAdmin;
     public boolean isAuthorized;
+    public boolean isAvailable = true;
     public String username;
     public boolean disconnected;
-    HashMap<String, String> secrets;
+    HashMap<String, String> admins;
+    HashMap<String, String> users;
 
 
     // konstruktor pre triedu clientHandler
-    public ClientHandler(Socket socket, String name, DataInputStream dis, DataOutputStream dos, HashMap<String, String> secrets) throws IOException {
+    public ClientHandler(Socket socket, String name, DataInputStream dis, DataOutputStream dos, HashMap<String, String> admins, HashMap<String, String>  users) throws IOException {
         this.dos = dos;
         this.dis = dis;
         this.name = name;
@@ -267,7 +296,8 @@ class ClientHandler implements Runnable {
         this.isAdmin = false;
         this.isAuthorized = false;
         this.disconnected = false;
-        this.secrets = secrets;
+        this.admins = admins;
+        this.users = users;
     }
 
     // metoda s cyklom while
@@ -292,26 +322,31 @@ class ClientHandler implements Runnable {
                         this.dos.close();
                         this.dis.close();
                         this.socket.close();
+                        if(isAdmin){
+                            Server.availableAdmin.remove(username);
+                        }if(!isAdmin){
+                            Server.connectedUsers.remove(username);
+                        }
                         System.out.println("Socket closed.");
                         return;
                     }
 
                     if (recipient.equals("server")) {
-                        String[] result = parse(MsgToSend);
+                        String[] result = parse(name, MsgToSend);
                         recipient = name;
                         MsgToSend = result[0] + ";" + result[1];
                         System.out.println("My response: " + MsgToSend);
                     }
-
-
-                    for (ClientHandler mc : Server.ar) {
-                        if (mc.name.equals(recipient) && mc.isLogged == true) {
-                            mc.dos.writeUTF(this.name + ";" + MsgToSend);
-                            received = null;
-                            break;
-                        }
-                        if (recipient.equals("broadcast") && mc.isLogged == true && this.name != mc.name) {     //pokud je příjemce "broadcast" pošle zprávu všem
-                            mc.dos.writeUTF(this.name + ";" + MsgToSend);
+                    if(isAdmin) {
+                        for (ClientHandler mc : Server.ar) {
+                            if (mc.name.equals(recipient) && mc.isLogged == true) {
+                                mc.dos.writeUTF(this.name + ";" + MsgToSend);
+                                received = null;
+                                break;
+                            }
+                            if (recipient.equals("broadcast") && mc.isLogged == true && this.name != mc.name) {     //pokud je příjemce "broadcast" pošle zprávu všem
+                                mc.dos.writeUTF(this.name + ";" + MsgToSend);
+                            }
                         }
                     }
                     received = null;
@@ -326,7 +361,7 @@ class ClientHandler implements Runnable {
         }
     }
 
-    public String[] parse(String message) throws Exception {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
+    public String[] parse(String recipient, String message) throws Exception {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
         StringTokenizer st = new StringTokenizer(message, ";");
         String[] result = {null, null};
         String code = st.nextToken();
@@ -354,12 +389,48 @@ class ClientHandler implements Runnable {
                 break;
             case "keys":
                 result[0] = "keys";
-                if(isAuthorized){
+                if(isAuthorized&&isAdmin){
                     genKeysAndSend(this);
                     result[1] = "Keys generated and sent";
                 }
                 else result[1] = "Not authorized to recieve keys";
                 break;
+            case "confirmed":
+                if(isAdmin) {
+                    isAvailable = true;
+                    Server.availableAdmin.add(username);
+                    result[0] = "OK";
+                    result[1] = "OK";
+                }
+                else{
+                    result[0] = "NOK";
+                    result[1] = "Not authorized";
+                }
+                break;
+            case "rejected":
+                if(isAdmin) {
+                    isAvailable = true;
+                    Server.availableAdmin.add(username);
+                    Server.deleteDoc(message);
+                    result[1] = "OK";
+                    result[0] = "OK";
+                }
+                else{
+                    result[0] = "NOK";
+                    result[1] = "Not authorized";
+                }
+                break;
+            case "newuser":
+                if(isAdmin) {
+                    String[] newuser = msg.split(":");
+                    Server.addUser(newuser[0], newuser[1]);
+                    result[0] = "OK";
+                    result[1] = "Added user";
+                }
+                else{
+                    result[0] = "NOK";
+                    result[1] = "Not authorized";
+                }
         }
         return result;
     }
@@ -385,18 +456,32 @@ class ClientHandler implements Runnable {
     private String authenticate(String username, String pass) throws NoSuchAlgorithmException {
         isAuthorized = false;
         System.out.println("Authenticaton - Username: " + username + " , Password: " + pass);
-        if (!secrets.containsKey(username)) {
+        if (!admins.containsKey(username)&&!users.containsKey(username)) {
             return "Uživatel nenalezen";
-        } else if (Server.connectedUsers.contains(username)){
+        } else if (Server.connectedUsers.contains(username)||Server.availableAdmin.contains(username)) {
             return "Uživatel je již přihlášen";
-        } else if (!secrets.get(username).equals(Crypto.getStringHash(pass))) {
-            System.out.println("Correct password: " + secrets.get(username));
-            return "Špatné heslo";
-        } else if (secrets.get(username).equals(Crypto.getStringHash(pass))) {
-            isAuthorized = true;
-            this.username = username;
-            return "Přihlášení úspěšné";
-        } else return "Autentizace byla neúspěšná";
+        } else if(admins.containsKey(username)){
+              if (!admins.get(username).equals(Crypto.getStringHash(pass))) {
+                return "Špatné heslo";
+            } else if (admins.get(username).equals(Crypto.getStringHash(pass))) {
+                isAuthorized = true;
+                isAdmin = true;
+                this.username = username;
+                Server.availableAdmin.add(username);
+                return "Přihlášení úspěšné - role je admin";
+            }
+        } else if(users.containsKey(username)){
+              if (!users.get(username).equals(Crypto.getStringHash(pass))) {
+                return "Špatné heslo";
+            } else if (users.get(username).equals(Crypto.getStringHash(pass))) {
+                isAuthorized = true;
+                isAdmin = false;
+                this.username = username;
+                Server.connectedUsers.add(username);
+                return "Přihlášení úspěšné - role je uživatel";
+            }
+        }
+        return "Autentizace byla neúspěšná";
     }
 
     private static String serialize(Serializable o) throws IOException {            // serializace objektů do Stringu pro přenos

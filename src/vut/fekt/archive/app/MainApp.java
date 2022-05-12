@@ -23,7 +23,14 @@ public class MainApp extends JFrame {
     public JLabel archiveLabel;
     public Blockchain blockchain = new Blockchain();
     public MainApp frame;
+
     public ShowDocument sd;
+    public boolean docConfirmation = false;
+
+    public NewUser nu;
+    public boolean newUserClicked = false;
+    public boolean nuDone = false;
+
     public Client client;
     private JPanel panel1;
     private JTextPane textPane1;
@@ -36,6 +43,7 @@ public class MainApp extends JFrame {
     private JTextField passwordField;
     private JButton connectButton;
     private JButton authButton;
+    private JButton newUserButton;
 
     private KeyPair keyPair;
     private ArrayList<PublicKey> publicKeys = new ArrayList<>();
@@ -43,8 +51,9 @@ public class MainApp extends JFrame {
     private boolean isAuthorized = false;
     private String url=null;
 
-    public MainApp(ShowDocument showdoc) {
+    public MainApp(ShowDocument showdoc, NewUser newUser) {
         this.sd = showdoc;
+        this.nu = newUser;
 
         try {
             keyPair = Crypto.generateKeyPair();
@@ -128,6 +137,13 @@ public class MainApp extends JFrame {
                 }
             }
         });
+        newUserButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                newUserClicked = true;
+                System.out.println("This happened "+newUserClicked);
+            }
+        });
         /*saveBlockchainButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -151,12 +167,13 @@ public class MainApp extends JFrame {
                 }
             }
         });*/
+
     }
 
     //inicializace framu
     public void initMainapp() {
 
-        frame = new MainApp(this.sd);
+        frame = new MainApp(this.sd, this.nu);
         frame.setTitle("Blockchain Archiv");
         frame.pack();
         frame.setContentPane(this.panel1);
@@ -228,12 +245,9 @@ public class MainApp extends JFrame {
                                 client.newVypis = false;
                             }
                             if(client.newFiles!=null){
+                                sd.init(url,client.newDoc);
+                                docConfirmation = true;
                                 setVypis("Nové archiválie přidány");
-                                getBlockchainsAndSetMostCommon();
-                                blockchain.addBlock(createBlock(client.newFiles,client.newDoc));
-                                client.setBlockchain(blockchain);
-                                client.newFiles=null;
-                                client.send("newblock;" + client.serialize(blockchain), "broadcast");
                             }
                             if(client.newBlock){
                                 client.newBlock=false;
@@ -249,6 +263,25 @@ public class MainApp extends JFrame {
                                 keyPair = client.keyPair;
                                 client.newKeyPair = false;
                                 setVypis("Klíče obdrženy");
+                            }
+                            if(sd.result.equals("confirmed")){
+                                getBlockchainsAndSetMostCommon();
+                                blockchain.addBlock(createBlock(client.newFiles,client.newDoc));
+                                client.setBlockchain(blockchain);
+                                client.newFiles=null;
+                                client.send("confirmed;Looks good!", "server");
+                                client.send("newblock;" + client.serialize(blockchain), "broadcast");
+                                sd.result = "";
+                            }
+                            if(sd.result.equals("rejected")){
+                                client.send("rejected;"+sd.doc,"server");
+                                client.newFiles = null;
+                                sd.result = "";
+                            }
+                            if(nu.ok){
+                                client.send("newuser;"+nu.getUsername()+":"+nu.getPassword(), "server");
+                                nuDone = true;
+                                nu.ok = false;
                             }
                         }
                     } catch (InterruptedException e) {

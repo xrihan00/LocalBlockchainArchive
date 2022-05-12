@@ -1,11 +1,13 @@
 package vut.fekt.archive.app;
 
+import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 import vut.fekt.archive.ArchiveDocument;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
+import java.io.*;
 
 public class ShowDocument extends JFrame{
     private JTextField nazevField;
@@ -15,37 +17,37 @@ public class ShowDocument extends JFrame{
     private JTextField obsahField;
     private JTextField idField;
     private JPanel panel;
-    private JButton novaVerzeButton;
+    private JButton potvrditDokumentButton;
+    private JButton odstranitDokumentButton;
+    private JLabel encrypt;
+    private JTextField encryptField;
     private String newVersionCount;
     public ShowDocument frame;
 
-    private ArchiveDocument doc;
+    public String doc;
     public boolean newVersion = false;
+    public String result = "";
 
     public ShowDocument(){
-        //tlačítko Otevřít obsah, otevře průzkumník ve složce kde se nachází obsah
-        openButton.addActionListener(new ActionListener() {
+        potvrditDokumentButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    Runtime.getRuntime().exec("explorer.exe /select," + doc.getContentPath());
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
+                result = "confirmed";
+            }
+        });
+        odstranitDokumentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                result = "rejected";
             }
         });
     }
 
-    public void init(ArchiveDocument document){
+    public void init(String url, String newDoc) throws IOException {
         frame = new ShowDocument();
-        frame.setTitle("Detail dokumentu");
-        doc = document;
-        nazevField.setText(doc.getDocName());
-        autorField.setText(doc.getAuthor());
-        timeField.setText(doc.getTimestamp());
-        obsahField.setText(doc.getContentName());
-        nazevField.setText(doc.getDocName());
-        idField.setText(String.valueOf(doc.getId()));
+        frame.setTitle("Nový dokument");
+
+        parseDoc(url,newDoc);
 
         frame.pack();
         frame.setContentPane(this.panel);
@@ -53,21 +55,18 @@ public class ShowDocument extends JFrame{
         frame.setSize(500,300);
     }
 
-    public String getNewVersionCount(){
-        String current = doc.getVersion();
-        double currentDouble = Double.valueOf(current);
-        double newDouble = currentDouble+1.0;
-        return String.valueOf(newDouble);
+    public void parseDoc(String url, String doc) throws IOException {
+        String metaPath = "http://"+url+"/"+doc+"/metadata.json";
+        FileInputStream fis =new FileInputStream(metaPath);
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        String jsonFile = IOUtils.toString(bis, "UTF-8");
+        JSONObject json = new JSONObject(jsonFile);
+        nazevField.setText(doc);
+        autorField.setText(json.getString("author"));
+        timeField.setText(json.getString("date"));
+        encryptField.setText(json.getString("encrypted"));
+        autorField.setText(json.getString("author"));
     }
-
-    public ArchiveDocument getDoc() {
-        return doc;
-    }
-
-    public void setDoc(ArchiveDocument doc) {
-        this.doc = doc;
-    }
-
 
     public ShowDocument getFrame() {
         return frame;

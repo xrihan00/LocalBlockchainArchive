@@ -39,11 +39,6 @@
           </component>
         </children>
       </scrollpane>
-      <hspacer id="75645">
-        <constraints>
-          <grid row="13" column="0" row-span="1" col-span="2" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-      </hspacer>
       <component id="2526e" class="javax.swing.JButton" binding="validateBlockchainButton" default-binding="true">
         <constraints>
           <grid row="8" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
@@ -135,6 +130,14 @@
         </constraints>
         <properties>
           <text value="Log komunikace:"/>
+        </properties>
+      </component>
+      <component id="f6f70" class="javax.swing.JButton" binding="newUserButton">
+        <constraints>
+          <grid row="13" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Nový uživatel"/>
         </properties>
       </component>
     </children>
