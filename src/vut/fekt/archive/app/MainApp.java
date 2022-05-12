@@ -235,6 +235,7 @@ public class MainApp extends JFrame {
         Thread clientThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                File[] files =null;
                 while (true) {
                     try {
                         Thread.sleep(100);
@@ -246,6 +247,8 @@ public class MainApp extends JFrame {
                             }
                             if(client.newFiles!=null){
                                 sd.init(url,client.newDoc);
+                                files = client.newFiles;
+                                client.newFiles = null;
                                 docConfirmation = true;
                                 setVypis("Nové archiválie přidány");
                             }
@@ -266,16 +269,14 @@ public class MainApp extends JFrame {
                             }
                             if(sd.result.equals("confirmed")){
                                 getBlockchainsAndSetMostCommon();
-                                blockchain.addBlock(createBlock(client.newFiles,client.newDoc));
+                                blockchain.addBlock(createBlock(files,client.newDoc));
                                 client.setBlockchain(blockchain);
-                                client.newFiles=null;
                                 client.send("confirmed;Looks good!", "server");
                                 client.send("newblock;" + client.serialize(blockchain), "broadcast");
                                 sd.result = "";
                             }
                             if(sd.result.equals("rejected")){
-                                client.send("rejected;"+sd.doc,"server");
-                                client.newFiles = null;
+                                client.send("rejected;"+sd.docName,"server");
                                 sd.result = "";
                             }
                             if(nu.ok){

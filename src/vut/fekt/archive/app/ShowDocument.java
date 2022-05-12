@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.net.URL;
 
 public class ShowDocument extends JFrame{
     private JTextField nazevField;
@@ -24,7 +25,7 @@ public class ShowDocument extends JFrame{
     private String newVersionCount;
     public ShowDocument frame;
 
-    public String doc;
+    public String docName;
     public boolean newVersion = false;
     public String result = "";
 
@@ -56,16 +57,20 @@ public class ShowDocument extends JFrame{
     }
 
     public void parseDoc(String url, String doc) throws IOException {
-        String metaPath = "http://"+url+"/"+doc+"/metadata.json";
-        FileInputStream fis =new FileInputStream(metaPath);
-        BufferedInputStream bis = new BufferedInputStream(fis);
+        String metaPath = "http://"+url+"/archive/"+doc+"/metadata.json";
+        URL path = new URL(metaPath);
+        InputStream in = path.openStream();
+        BufferedInputStream bis = new BufferedInputStream(in);
         String jsonFile = IOUtils.toString(bis, "UTF-8");
         JSONObject json = new JSONObject(jsonFile);
         nazevField.setText(doc);
+        docName = doc;
         autorField.setText(json.getString("author"));
-        timeField.setText(json.getString("date"));
-        encryptField.setText(json.getString("encrypted"));
+        timeField.setText(json.getString("added"));
+        encryptField.setText(String.valueOf(json.getBoolean("encrypted")));
         autorField.setText(json.getString("author"));
+        idField.setText(String.valueOf(json.getInt("id")));
+        obsahField.setText(String.valueOf(json.get("files")));
     }
 
     public ShowDocument getFrame() {

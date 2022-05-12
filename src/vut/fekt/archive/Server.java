@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.*;
 import vut.fekt.archive.blockchain.CryptoException;
@@ -29,7 +30,7 @@ public class Server extends Thread {
     private JPanel panelserver;
     private JLabel label;
     //kam spadají uploady z webu
-    public static String secretsFile = "C:\\Diplomka\\LocalBlockchainArchive2\\secrets.txt";
+    public static String secretsFile = "D:/secrets.txt";
     public static String rootDir = "D:/Archiv/Upload/upload-api/";
     //kam se bude archivovat - kde běží apache
     public static String archDir = "C:/Programy/Xampp/htdocs/archive/";
@@ -41,8 +42,8 @@ public class Server extends Thread {
     static HashMap<String, String> users = new HashMap<>();
     public static ArrayList<PublicKey> legitKeys = new ArrayList<java.security.PublicKey>();
 
-    public static void main(String[] args) throws Exception {               // metóda main na spuštění aplikácie Server
-        JFrame frame = new JFrame("Server");                            // GUI pre aplikáciu Server
+    public static void main(String[] args) throws Exception {
+        JFrame frame = new JFrame("Server");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setContentPane(new Server().panelserver);
@@ -58,7 +59,7 @@ public class Server extends Thread {
         }
         newDocumentThread();
 
-        ServerSocket serverSocket = new ServerSocket(2021);             // vytvorenie Socketu pre Server, potom vytvorenie triedy Client Handler v novom vlákne
+        ServerSocket serverSocket = new ServerSocket(2021);
         Socket socket;
         while (true) {
             socket = serverSocket.accept();
@@ -137,10 +138,10 @@ public class Server extends Thread {
                                         System.out.println("I'm moving it here: " +archDir + newDocs[0].getName());
                                         File archiveDir = new File(archDir +  newDocs[0].getName());
                                         FileUtils.moveToDirectory(dir, new File(archDir),true);
-                                        String id = createJsonAndRename(archiveDir);
+                                        String docname = createJsonAndRename(archiveDir);
                                         File[] files = archiveDir.listFiles();
                                         String serializedFiles = Crypto.serialize(files);
-                                        pickClientAndSend(serializedFiles, id);
+                                        pickClientAndSend(serializedFiles, docname);
                                     }
                                 }
                             }
@@ -193,7 +194,8 @@ public class Server extends Thread {
     }
 
     private static String createJsonAndRename(File dir) throws IOException, CryptoException {
-        String id = dir.getName();
+        int randomNum = ThreadLocalRandom.current().nextInt(100000000, 999999999 + 1);
+        String id = String.valueOf(randomNum);
         File[] files = dir.listFiles();
         String s = files[0].getName();
         System.out.println(s);
@@ -234,7 +236,7 @@ public class Server extends Thread {
         FileOutputStream fos = new FileOutputStream(dir.getAbsolutePath()+"/metadata.json");
         fos.write(obj.toString().getBytes(StandardCharsets.UTF_8));
         fos.close();
-        return id;
+        return docname;
         //json.write(obj.);
     }
 
@@ -252,7 +254,7 @@ public class Server extends Thread {
 
     public static void deleteDoc(String docId) throws IOException {
         String dir = archDir+docId;
-        Files.delete(Path.of(dir));
+        FileUtils.deleteDirectory(new File(dir));
     }
 
     private static boolean checkIfClientsConnectedAndRemove() {
@@ -411,7 +413,7 @@ class ClientHandler implements Runnable {
                 if(isAdmin) {
                     isAvailable = true;
                     Server.availableAdmin.add(username);
-                    Server.deleteDoc(message);
+                    Server.deleteDoc(msg);
                     result[1] = "OK";
                     result[0] = "OK";
                 }
