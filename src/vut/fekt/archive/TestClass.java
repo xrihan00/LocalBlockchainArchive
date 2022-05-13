@@ -2,7 +2,9 @@ package vut.fekt.archive;
 
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -50,6 +52,20 @@ public class TestClass {
         String hash1 = Crypto.getFileHash("D:/Archiv/test2.png");
         String hash2 = Crypto.getFileHash("D:/Archiv/test3.png");
         assertEquals(hash1, hash2);
+    }
+
+    @Test
+    public void ipTest() throws UnknownHostException {
+        InetAddress ip = InetAddress.getByName("localhost");
+
+        InetAddress ip2 = InetAddress.getLocalHost();
+        InetAddress ip3 = InetAddress.getLoopbackAddress();
+        InetAddress ip4 = InetAddress.getByName("127.0.0.1");
+        System.out.println(ip.getHostAddress());
+        System.out.println(ip2);
+        System.out.println(ip3);
+        System.out.println(ip4);
+
     }
 
     @Test

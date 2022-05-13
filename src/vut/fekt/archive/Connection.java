@@ -21,11 +21,8 @@ public class Connection{
     public void initialize(String url) throws IOException, UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {                    // inicializace pro vytvoření komunikace - connection
         Scanner sc = new Scanner(System.in);
 
-        InetAddress ip = InetAddress.getByName("127.0.0.1");
-        //socket = new Socket(ip,port);
-
-
-        socket = getSSLSocket(ip);
+        InetAddress ip = InetAddress.getByName(url);
+        socket = getSSLSocket(ip.getHostAddress());
         dis = new DataInputStream((socket.getInputStream()));           // vytvoření dataInputStream pro příchozí komunikaci
         this.dos = new DataOutputStream(socket.getOutputStream());
 
@@ -49,7 +46,7 @@ public class Connection{
         read.start();
     }
 
-    public Socket getSSLSocket(InetAddress ip) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
+    public Socket getSSLSocket(String ip) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
         Objects.requireNonNull("TLSv1.2", "TLS version is mandatory");
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
         InputStream tstore = Connection.class
