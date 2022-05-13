@@ -1,13 +1,9 @@
 package vut.fekt.archive;
 
-import edu.uci.ics.crawler4j.crawler.CrawlConfig;
-import edu.uci.ics.crawler4j.crawler.CrawlController;
-import edu.uci.ics.crawler4j.fetcher.PageFetcher;
-import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
-import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import org.apache.commons.io.FileUtils;
 import vut.fekt.archive.blockchain.Crypto;
 
+import javax.net.ssl.*;
 import javax.swing.*;
 import java.io.*;
 import java.net.*;
@@ -16,9 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
+import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -30,7 +24,7 @@ public class Server extends Thread {
     private JPanel panelserver;
     private JLabel label;
     //kam spadají uploady z webu
-    public static String secretsFile = "D:/secrets.txt";
+    public static String secretsFile = "C:\\Diplomka\\LocalBlockchainArchive2/secrets.txt";
     public static String rootDir = "D:/Archiv/Upload/upload-api/";
     //kam se bude archivovat - kde běží apache
     public static String archDir = "C:/Programy/Xampp/htdocs/archive/";
@@ -58,11 +52,9 @@ public class Server extends Thread {
             System.out.println("No keys found");
         }
         newDocumentThread();
-
-        ServerSocket serverSocket = new ServerSocket(2021);
-        Socket socket;
+        SSLServerSocket sslsocket= getSslSocket();
         while (true) {
-            socket = serverSocket.accept();
+            Socket socket = sslsocket.accept();
             System.out.println("New Client " + socket);
 
             DataInputStream dis = new DataInputStream((socket.getInputStream()));       // vstupní data
@@ -75,6 +67,35 @@ public class Server extends Thread {
             t.start();
             i++;
         }
+    }
+
+    private static SSLServerSocket getSslSocket() throws Exception {
+            Objects.requireNonNull("TLSv1.2", "TLS version is mandatory");
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            InputStream tstore = Server.class
+                    .getResourceAsStream("/keystore.p12");
+            trustStore.load(tstore, new char[] {'a', 'b', 'c', '1','2', '3'});
+            tstore.close();
+            TrustManagerFactory tmf = TrustManagerFactory
+                    .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(trustStore);
+
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            InputStream kstore = Server.class
+                    .getResourceAsStream("/" + "keystore.p12");
+            keyStore.load(kstore, new char[] {'a', 'b', 'c', '1','2', '3'});
+            KeyManagerFactory kmf = KeyManagerFactory
+                    .getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(keyStore, new char[] {'a', 'b', 'c', '1','2', '3'});
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(),
+                    SecureRandom.getInstanceStrong());
+            SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+            ServerSocket listener = factory.createServerSocket(2021);
+            SSLServerSocket sslListener = (SSLServerSocket) listener;
+            sslListener.setNeedClientAuth(true);
+            sslListener.setEnabledProtocols(new String[] {"TLSv1.2"});
+            return sslListener;
     }
 
     private static void loadSecrets() throws IOException {
@@ -128,12 +149,6 @@ public class Server extends Thread {
                                 else if (newDocs.length != 0) {
                                     System.out.println("Document " + newDocs[0].getName());
                                     File dir = new File(newDocs[0].getAbsolutePath());
-                                    if(dir.getName().contains(",#,")){
-                                        String[] s = dir.getName().split(",#,");
-                                        String webUrl = s[1];
-                                        System.out.println("Website archive request for " + s[1]);
-
-                                    }
                                     if (dir.listFiles().length != 0) {
                                         System.out.println("I'm moving it here: " +archDir + newDocs[0].getName());
                                         File archiveDir = new File(archDir +  newDocs[0].getName());
@@ -156,42 +171,6 @@ public class Server extends Thread {
         filethread.start();
     }
 
-    private static String saveSite(String[] s){
-        String id = s[0];
-        String url = s[1];
-        try {
-            crawl(archDir+"archive/"+ id,url);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return id;
-
-    }
-
-    public static void crawl(String folder, String url) throws Exception {
-        String crawlStorageFolder = folder;
-        int numberOfCrawlers = 5;
-
-        CrawlConfig config = new CrawlConfig();
-        config.setIncludeHttpsPages(true);
-        config.setCrawlStorageFolder(crawlStorageFolder);
-
-        // Instantiate the controller for this crawl.
-        PageFetcher pageFetcher = new PageFetcher(config);
-        RobotstxtConfig robotstxtConfig = new RobotstxtConfig();
-        RobotstxtServer robotstxtServer = new RobotstxtServer(robotstxtConfig, pageFetcher);
-        CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
-
-        // For each crawl, you need to add some seed urls. These are the first
-        // URLs that are fetched and then the crawler starts following links
-        // which are found in these pages
-        controller.addSeed(url);
-
-        // Start the crawl. This is a blocking operation, meaning that your code
-        // will reach the line after this only when crawling is finished.
-        controller.start(Crawler.class, numberOfCrawlers);
-
-    }
 
     private static String createJsonAndRename(File dir) throws IOException, CryptoException {
         int randomNum = ThreadLocalRandom.current().nextInt(100000000, 999999999 + 1);

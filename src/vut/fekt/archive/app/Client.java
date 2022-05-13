@@ -5,8 +5,8 @@ import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;
 
 import java.io.*;
-import java.security.KeyPair;
-import java.security.PublicKey;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.StringTokenizer;
@@ -28,7 +28,7 @@ public class Client {
     public KeyPair keyPair = null;
 
 
-    public void createConnection(String url) throws IOException {                 // je vytvořeno spojení se serverem
+    public void createConnection(String url) throws IOException, UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {                 // je vytvořeno spojení se serverem
         connection = new Connection();
         connection.initialize(url);
         Thread receive = new Thread(new Runnable(){
