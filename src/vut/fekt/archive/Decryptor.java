@@ -14,6 +14,7 @@ public class Decryptor extends JDialog {
     private JTextField fileField;
     private JTextField passField;
     private JLabel status;
+    private JTextField docnameField;
 
     private File inputFile;
     private String password;
@@ -39,13 +40,13 @@ public class Decryptor extends JDialog {
         decryptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(passField.getText().isEmpty()||fileField.getText().isEmpty()){
-                    status.setText("Chybí cesta k souboru a heslo");
+                if(passField.getText().isEmpty()||fileField.getText().isEmpty()||docnameField.getText().isEmpty()){
+                    status.setText("Chybí některý z údajů");
                 }
                 else {
                     File folder = inputFile.getParentFile();
                     try {
-                        Crypto.decrypt(passField.getText(),inputFile, new File(folder.getAbsolutePath()+"/Decrypted-"+inputFile.getName()),folder.getName());
+                        Crypto.decrypt(passField.getText(),inputFile, new File(folder.getAbsolutePath()+"/Decrypted-"+inputFile.getName()),docnameField.getText());
                     } catch (CryptoException ex) {
                         status.setText("Špatné heslo!");
                         //ex.printStackTrace();

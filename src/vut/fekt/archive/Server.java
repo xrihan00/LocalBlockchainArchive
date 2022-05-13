@@ -195,7 +195,7 @@ public class Server extends Thread {
             if(encrypt) {
                 String filename =ss[4] + "." + ss[5];
                 filenames.add(filename);
-                Crypto.encrypt(password,f, new File(dir.getAbsolutePath() + "/" + filename),id);
+                Crypto.encrypt(password,f, new File(dir.getAbsolutePath() + "/" + filename),docname);
                 f.delete();
                 //Files.move(Path.of(f.getAbsolutePath()),Path.of(dir.getAbsolutePath()+"/"+ss[4]+"."+ss[5]));
             }
