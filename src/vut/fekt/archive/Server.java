@@ -1,6 +1,7 @@
 package vut.fekt.archive;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import vut.fekt.archive.blockchain.Crypto;
 
 import javax.net.ssl.*;
@@ -23,11 +24,17 @@ import vut.fekt.archive.blockchain.CryptoException;
 public class Server extends Thread {
     private JPanel panelserver;
     private JLabel label;
+
+    //udaje načtené z config.json
     //kam spadají uploady z webu
     public static String secretsFile = "C:\\Diplomka\\LocalBlockchainArchive2/secrets.txt";
     public static String rootDir = "D:/Archiv/Upload/upload-api/";
     //kam se bude archivovat - kde běží apache
     public static String archDir = "C:/Programy/Xampp/htdocs/archive/";
+    public static String keystoreName = "keystore.p12";
+    public static String keysFile = "C:\\Diplomka\\LocalBlockchainArchive2/keys.txt";
+    public static boolean confirmation = true;
+
     static Vector<ClientHandler> ar = new Vector<>();
     static Vector<String> connectedUsers = new Vector<>();
     static Vector<String> availableAdmin = new Vector<>();
@@ -44,6 +51,7 @@ public class Server extends Thread {
         frame.setVisible(true);
         frame.setBounds(100, 100, 300, 100);
 
+        loadConfig();
         loadSecrets();
         try {
             loadKeys();
@@ -69,11 +77,32 @@ public class Server extends Thread {
         }
     }
 
+    private static void loadConfig() {
+        //File config = new File("config.json");
+        InputStream in = null;
+        try {
+            in = Server.class.getResourceAsStream("/config.json");
+            BufferedInputStream bis = new BufferedInputStream(in);
+            String jsonFile = IOUtils.toString(bis, "UTF-8");
+            JSONObject json = new JSONObject(jsonFile);
+            System.out.println(json.toString());
+            secretsFile = json.getString("secrets");
+            rootDir = json.getString("rootDir");
+            archDir = json.getString("archDir");
+            keystoreName = json.getString("keystoreName");
+            keysFile = json.getString("keysFile");
+            confirmation = json.getBoolean("docConfirmation");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("No config file found, using default values");
+        }
+    }
+
     private static SSLServerSocket getSslSocket() throws Exception {
             Objects.requireNonNull("TLSv1.2", "TLS version is mandatory");
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
             InputStream tstore = Server.class
-                    .getResourceAsStream("/keystore.p12");
+                    .getResourceAsStream(keystoreName);
             trustStore.load(tstore, new char[] {'a', 'b', 'c', '1','2', '3'});
             tstore.close();
             TrustManagerFactory tmf = TrustManagerFactory
@@ -82,7 +111,7 @@ public class Server extends Thread {
 
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             InputStream kstore = Server.class
-                    .getResourceAsStream("/" + "keystore.p12");
+                    .getResourceAsStream(keystoreName);
             keyStore.load(kstore, new char[] {'a', 'b', 'c', '1','2', '3'});
             KeyManagerFactory kmf = KeyManagerFactory
                     .getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -372,7 +401,8 @@ class ClientHandler implements Runnable {
                 result[0] = "keys";
                 if(isAuthorized&&isAdmin){
                     genKeysAndSend(this);
-                    result[1] = "Keys generated and sent";
+                    //pošleme info o tom jestli je zapnutá konfirmace nových dokumentů
+                    result[1] = String.valueOf(Server.confirmation);
                 }
                 else result[1] = "Not authorized to recieve keys";
                 break;
