@@ -93,6 +93,7 @@ public class MainApp extends JFrame {
                         client.send("End", "server");
                         client.connection = null;
                         client = null;
+                        vypis.setText("Odpojen");
                         Thread.sleep(100);
                     } catch (InterruptedException interruptedException) {
                         interruptedException.printStackTrace();
@@ -102,6 +103,14 @@ public class MainApp extends JFrame {
                     vypis.setText("Vyplňte URL/IP adresu archivu");
                 } else {
                     client = new Client();
+                    try{
+                        loadArchiveBlockchain();
+                    }
+                    catch (IOException ioe){
+                        System.out.println("Nenašel jsem serializované verze blockchainu a klíčů");
+                    } catch (ClassNotFoundException cnfe) {
+                        cnfe.printStackTrace();
+                    }
                     try {
                         client.createConnection(urlField.getText());
                         url = urlField.getText();
@@ -180,16 +189,7 @@ public class MainApp extends JFrame {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setBounds(100, 100, 500, 500);
         frame.setSize(750, 900);
-        try{
-            loadArchiveBlockchain();
-            setVypis("Načten blockchain");
-            setVypis("Načteny klíče");
-        }
-        catch (IOException ioe){
-            System.out.println("Nenašel jsem serializované verze blockchainu a klíčů");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+
 
         frame.addWindowListener(new WindowListener() {
             //při zavírání okna je odeslána zpráva k odhlášení od serveru
@@ -384,5 +384,6 @@ public class MainApp extends JFrame {
         FileInputStream fis = new FileInputStream(System.getProperty("user.dir")+"/serializedBlockchain.txt");
         ObjectInputStream ois = new ObjectInputStream(fis);
         blockchain = (Blockchain) ois.readObject();
+        client.blockchain = blockchain;
     }
 }

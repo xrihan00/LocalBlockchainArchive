@@ -24,7 +24,7 @@ public class Server extends Thread {
     private JPanel panelserver;
     private JLabel label;
     //kam spadají uploady z webu
-    public static String secretsFile = "C:\\Diplomka\\LocalBlockchainArchive2/secrets.txt";
+    public static String secretsFile = "D:/secrets.txt";
     public static String rootDir = "D:/Archiv/Upload/upload-api/";
     //kam se bude archivovat - kde běží apache
     public static String archDir = "C:/Programy/Xampp/htdocs/archive/";

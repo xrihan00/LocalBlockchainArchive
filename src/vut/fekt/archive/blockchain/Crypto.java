@@ -128,6 +128,7 @@ public class Crypto implements Serializable {
         String s = "";
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         for (String file:f) {
+            //file.replac
             URL path = new URL("http://"+hostname+"/archive/"+folder+"/"+file);
             InputStream in = path.openStream();
             BufferedInputStream bis = new BufferedInputStream(in);
