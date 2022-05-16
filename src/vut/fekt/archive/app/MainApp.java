@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
+import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -248,8 +249,8 @@ public class MainApp extends JFrame {
                             if(client.newFiles!=null){
                                 if(client.confirmation==false){
                                     sd.result ="confirmed";
-                                    client.newFiles = null;
                                     files = client.newFiles;
+                                    client.newFiles = null;
                                 }
                                 else {
                                     sd.init(url, client.newDoc);

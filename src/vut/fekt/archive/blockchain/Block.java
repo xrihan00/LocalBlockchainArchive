@@ -87,6 +87,7 @@ public class Block implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("\nPředchozí hash: " + previousHash);
+        sb.append("\nNázev dokument: "+docName);
         sb.append("\nSoubory obsahu: ");
         for (String file:filepath) {
             sb.append("\n"+file);

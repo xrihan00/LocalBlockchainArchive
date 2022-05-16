@@ -361,7 +361,7 @@ class ClientHandler implements Runnable {
                     }
                     received = null;
                 }
-            } catch (SocketException f) {
+            } catch (SocketException | SSLException f) {
                 System.out.println("Unexpected disconnect");
                 disconnected = true;
                 return;

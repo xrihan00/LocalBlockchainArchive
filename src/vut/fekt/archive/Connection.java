@@ -90,7 +90,7 @@ public class Connection{
         try {
             dos.writeUTF(msg);                                                                       // do dataOutputStream se předá požadovaná zpráva k odeslání
             System.out.println("I sent this: "+msg);
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             e.printStackTrace();
         }
     }
