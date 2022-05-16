@@ -6,8 +6,6 @@ import vut.fekt.archive.blockchain.CryptoException;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class Decryptor extends JDialog {
     private JPanel contentPane;
@@ -48,16 +46,12 @@ public class Decryptor extends JDialog {
                 else {
                     File folder = inputFile.getParentFile();
                     try {
-                        File decrypted = new File(folder.getAbsolutePath()+"/Decrypted-"+inputFile.getName());
-                        Crypto.decrypt(passField.getText(),inputFile, decrypted,docnameField.getText());
-                        status.setText("Soubor dešifrován!");
-                        decrypted.delete();
+                        Crypto.decrypt(passField.getText(),inputFile, new File(folder.getAbsolutePath()+"/Decrypted-"+inputFile.getName()));
                     } catch (CryptoException ex) {
-                        status.setText("Špatné heslo nebo název dokumentu");
+                        status.setText("Špatné heslo!");
                         //ex.printStackTrace();
                     }
-
-
+                    status.setText("Soubor dešifrován!");
                 }
             }
         });

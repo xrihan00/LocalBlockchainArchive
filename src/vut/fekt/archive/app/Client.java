@@ -19,6 +19,7 @@ public class Client {
     public boolean newBlock = false;
     public boolean newKeys = false;
     public boolean newKeyPair = false;
+    public boolean confirmation = true;
     public String newDoc;
     public File[] newFiles = null;
     public Blockchain blockchain = null;
@@ -87,6 +88,9 @@ public class Client {
             case "keypair":
                 keyPair=(KeyPair) Crypto.deserialize(msg);
                 newKeyPair = true;
+                break;
+            case "keys":
+                confirmation = Boolean.parseBoolean(msg);
                 break;
             case "files":
                 vypis+="Recieved new files.";

@@ -81,12 +81,12 @@ public class TestClass {
 
     @Test
     public void encryptTest(){
-        File orig = new File("D:\\Archiv\\_Archive2\\28917\\28917.jpg");
-        File encrypted = new File("D:\\Archiv\\_Archive2\\28917\\encrypted.jpg");
-        File decrypted = new File("D:\\Archiv\\_Archive2\\28917\\decrypted.jpg");
+        File orig = new File("C:\\Diplomka\\LocalBlockchainArchive2\\config.json");
+        File encrypted = new File("C:\\Diplomka\\config.json");
+        File decrypted = new File("C:\\Diplomka\\decryptedconfig.json");
         try {
-            Crypto.encrypt("heslo",orig,encrypted,orig.getName());
-            Crypto.decrypt("heslo",encrypted,decrypted,orig.getName());
+            Crypto.encrypt("heslo",orig,encrypted);
+            Crypto.decrypt("heslo",encrypted,decrypted);
         } catch (CryptoException e) {
             e.printStackTrace();
         }

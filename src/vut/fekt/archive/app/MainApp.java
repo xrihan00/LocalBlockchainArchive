@@ -246,10 +246,17 @@ public class MainApp extends JFrame {
                                 client.newVypis = false;
                             }
                             if(client.newFiles!=null){
-                                sd.init(url,client.newDoc);
-                                files = client.newFiles;
-                                client.newFiles = null;
-                                docConfirmation = true;
+                                if(client.confirmation==false){
+                                    sd.result ="confirmed";
+                                    client.newFiles = null;
+                                    files = client.newFiles;
+                                }
+                                else {
+                                    sd.init(url, client.newDoc);
+                                    files = client.newFiles;
+                                    client.newFiles = null;
+                                    docConfirmation = true;
+                                }
                                 setVypis("Nové archiválie přidány");
                             }
                             if(client.newBlock){
