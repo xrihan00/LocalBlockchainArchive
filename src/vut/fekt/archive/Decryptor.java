@@ -46,7 +46,7 @@ public class Decryptor extends JDialog {
                 else {
                     File folder = inputFile.getParentFile();
                     try {
-                        Crypto.decrypt(passField.getText(),inputFile, new File(folder.getAbsolutePath()+"/Decrypted-"+inputFile.getName()),docnameField.getText());
+                        Crypto.decrypt(passField.getText(),inputFile, new File(folder.getAbsolutePath()+"/Decrypted-"+inputFile.getName()));
                     } catch (CryptoException ex) {
                         status.setText("Špatné heslo!");
                         //ex.printStackTrace();
