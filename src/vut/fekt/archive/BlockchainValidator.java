@@ -98,6 +98,11 @@ public class BlockchainValidator {
                 integrity = false;
                 result = false;
             }
+            if (!validPublicKeys.contains(block.getPubKey())) {
+                detailedLog += "\nVeřejný klíč:  " + block.getPubKey() + "\nVEŘEJNÝ KLĆ NENÍ VALIDNÍ!";
+                integrity = false;
+                result = false;
+            }
             blockhash = crypto.blockHash(block);
             detailedLog += "\n------------------------";
         }

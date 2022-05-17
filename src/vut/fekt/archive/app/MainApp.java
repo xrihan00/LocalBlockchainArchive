@@ -66,6 +66,11 @@ public class MainApp extends JFrame {
         printBlockchainButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                try {
+                    getBlockchainsAndSetMostCommon();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
                 textPane1.setText(blockchain.toString());
             }
         });
