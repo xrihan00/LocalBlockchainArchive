@@ -28,7 +28,7 @@ public class Decryptor extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fc = new JFileChooser();
-                fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 //fc.setCurrentDirectory(new File("D:/Archiv/"));
                 int r = fc.showOpenDialog(contentPane);
                 if (r == JFileChooser.APPROVE_OPTION) {
