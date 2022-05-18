@@ -1,11 +1,7 @@
 package vut.fekt.archive.app;
 
 
-import vut.fekt.archive.Archive;
-
 public class App {
-    public static Archive archive;
-
     //hlavní metoda celé  aplikace
     public static void main(String[] args) {
 

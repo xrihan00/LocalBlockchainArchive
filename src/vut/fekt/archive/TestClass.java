@@ -81,12 +81,12 @@ public class TestClass {
 
     @Test
     public void encryptTest(){
-        File orig = new File("C:\\Diplomka\\LocalBlockchainArchive2\\config.json");
-        File encrypted = new File("C:\\Diplomka\\config.json");
-        File decrypted = new File("C:\\Diplomka\\decryptedconfig.json");
+        File orig = new File("C:\\Diplomka\\Diplomka.7z");
+        File encrypted = new File("C:\\Diplomka\\Diplomka\\Diplomka.7z");
+        File decrypted = new File("C:\\Diplomka\\DecrDiplomka.7z");
         try {
             Crypto.encrypt("heslo",orig,encrypted);
-            Crypto.decrypt("heslo",encrypted,decrypted);
+            Crypto.decrypt("hesloa",encrypted,decrypted);
         } catch (CryptoException e) {
             e.printStackTrace();
         }
@@ -102,32 +102,6 @@ public class TestClass {
         }
     }
 
-    @Test
-    public void crawlTest() throws Exception {
-        String crawlStorageFolder = "C:/Crawler/";
-        int numberOfCrawlers = 5;
-
-        CrawlConfig config = new CrawlConfig();
-        config.setIncludeHttpsPages(true);
-        config.setCrawlStorageFolder(crawlStorageFolder);
-        config.setMaxPagesToFetch(50);
-        config.setPolitenessDelay(500);
-        // Instantiate the controller for this crawl.
-        PageFetcher pageFetcher = new PageFetcher(config);
-        RobotstxtConfig robotstxtConfig = new RobotstxtConfig();
-        RobotstxtServer robotstxtServer = new RobotstxtServer(robotstxtConfig, pageFetcher);
-        CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
-
-        // For each crawl, you need to add some seed urls. These are the first
-        // URLs that are fetched and then the crawler starts following links
-        // which are found in these pages
-        controller.addSeed("https://www.signia.cz");
-
-        // Start the crawl. This is a blocking operation, meaning that your code
-        // will reach the line after this only when crawling is finished.
-        controller.start(Crawler.class, numberOfCrawlers);
-
-    }
 
     @Test
     public void parseTest() throws Exception {

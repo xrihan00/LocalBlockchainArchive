@@ -1,6 +1,5 @@
 package vut.fekt.archive.app;
 
-import vut.fekt.archive.ArchiveDocument;
 import vut.fekt.archive.BlockchainValidator;
 import vut.fekt.archive.blockchain.Block;
 import vut.fekt.archive.blockchain.Blockchain;
@@ -12,7 +11,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
-import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -48,7 +46,6 @@ public class MainApp extends JFrame {
 
     private KeyPair keyPair;
     private ArrayList<PublicKey> publicKeys = new ArrayList<>();
-    private Map<String, ArchiveDocument> documentTimeMap = new HashMap<>();
     private boolean isAuthorized = false;
     private String url=null;
 
@@ -156,7 +153,6 @@ public class MainApp extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 newUserClicked = true;
-                System.out.println("This happened "+newUserClicked);
             }
         });
         /*saveBlockchainButton.addActionListener(new ActionListener() {
@@ -296,6 +292,10 @@ public class MainApp extends JFrame {
                                 client.send("newuser;"+nu.getUsername()+":"+nu.getPassword(), "server");
                                 nuDone = true;
                                 nu.ok = false;
+                            }
+                            if(nu.cancel){
+                                nuDone = true;
+                                nu.cancel = false;
                             }
                         }
                     } catch (InterruptedException e) {

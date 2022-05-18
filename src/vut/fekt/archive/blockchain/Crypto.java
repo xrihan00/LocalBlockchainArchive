@@ -190,6 +190,7 @@ public class Crypto implements Serializable {
                 | InvalidKeyException | BadPaddingException
                 | IllegalBlockSizeException | IOException
                 |InvalidAlgorithmParameterException  | InvalidKeySpecException ex) {
+            System.out.println("This happened");
             throw new CryptoException("Error encrypting/decrypting file", ex);
         }
     }

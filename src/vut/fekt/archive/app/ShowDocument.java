@@ -2,7 +2,6 @@ package vut.fekt.archive.app;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
-import vut.fekt.archive.ArchiveDocument;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

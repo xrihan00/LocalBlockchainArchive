@@ -1,8 +1,7 @@
 package vut.fekt.archive.app;
 
-import vut.fekt.archive.ArchiveDocument;
-
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -14,17 +13,16 @@ public class NewUser extends JFrame{
     private JButton OKButton;
     private JTextField passwordField;
     private JLabel path;
-    public JRadioButton admin;
     private JButton cancelButton;
     private String directory;
     private File newContent;
-    private ArchiveDocument archdoc;
     private NewUser frame;
     private String username;
     private String password;
     private String version;
 
     boolean ok = false;
+    boolean cancel = false;
 
     //okno vytváření nového dokumentu
     public NewUser() {
@@ -36,8 +34,27 @@ public class NewUser extends JFrame{
             public void actionPerformed(ActionEvent e) {
                 username = usernameField.getText();
                 password = passwordField.getText();
+                if(username.isEmpty()||password.isEmpty()){
+                    if(username.isEmpty()) {
+                        usernameField.setBackground(Color.PINK);
+                    }
+                    if(password.isEmpty()){
+                        passwordField.setBackground(Color.PINK);
+                    }
+                }
+                else {
+                    usernameField.setBackground(Color.WHITE);
+                    passwordField.setBackground(Color.WHITE);
+                    frame.setVisible(false);
+                    ok = true;
+                }
+            }
+        });
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 frame.setVisible(false);
-                ok=true;
+                cancel = true;
             }
         });
     }
