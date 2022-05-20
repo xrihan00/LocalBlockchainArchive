@@ -81,13 +81,15 @@ public class TestClass {
 
     @Test
     public void encryptTest(){
-        File orig = new File("C:\\Diplomka\\Diplomka.7z");
-        File encrypted = new File("C:\\Diplomka\\Diplomka\\Diplomka.7z");
-        File decrypted = new File("C:\\Diplomka\\DecrDiplomka.7z");
+        File orig = new File("C:/Soubory/Test/TestovaciDokument.txt");
+        File encrypted = new File("C:\\Users\\Tobias\\Downloads\\TestovaciDokument.txt");
+       // File decrypted = new File("C:\\Diplomka\\DecrDiplomka.7z");
         try {
-            Crypto.encrypt("heslo",orig,encrypted);
-            Crypto.decrypt("hesloa",encrypted,decrypted);
+            Crypto.encrypt("heslo",encrypted.getName(),orig,encrypted);
+            //Crypto.decrypt("hesloa",encrypted,decrypted);
         } catch (CryptoException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
 

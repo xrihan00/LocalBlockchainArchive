@@ -194,20 +194,21 @@ public class Crypto implements Serializable {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String TRANSFORMATION = "AES";
 
-    public static void encrypt(String key, File inputFile, File outputFile)
-            throws CryptoException {
-        cryptoFile(Cipher.ENCRYPT_MODE, key, inputFile,outputFile);
+    public static void encrypt(String key, String filename, File inputFile, File outputFile)
+            throws CryptoException, NoSuchAlgorithmException {
+        String salt = getStringHash(filename+key.length());
+        cryptoFile(Cipher.ENCRYPT_MODE, key, inputFile,outputFile,salt);
     }
 
     public static void decrypt(String key, File inputFile, File outputFile)
-            throws CryptoException {
-        cryptoFile(Cipher.DECRYPT_MODE, key, inputFile, outputFile);
+            throws CryptoException, NoSuchAlgorithmException {
+        String salt = getStringHash(inputFile.getName()+key.length());
+        cryptoFile(Cipher.DECRYPT_MODE, key, inputFile, outputFile,salt);
     }
 
 
-    public static void cryptoFile(int cipherMode, String password, File inputFile, File outputFile) throws CryptoException {
+    public static void cryptoFile(int cipherMode, String password, File inputFile, File outputFile,  String salt) throws CryptoException {
         try {
-            String salt = getStringHash(inputFile.getName()+password.length());
             SecretKey key =getKeyFromPassword(password, salt);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(cipherMode, key, generateIv(salt));
