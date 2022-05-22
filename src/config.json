@@ -1,8 +1,8 @@
 {
-"secrets": "C:\\Diplomka\\LocalBlockchainArchive2/secrets.txt",
+"secrets": "D:/secrets.txt",
 "rootDir": "D:/Archiv/Upload/upload-api/",
 "archDir": "C:/Programy/Xampp/htdocs/archive/",
 "keystoreName": "/keystore.p12",
-"keysFile": "C:\\Diplomka\\LocalBlockchainArchive2/keys.txt",
+"keysFile": "C:/Users/User/IdeaProjects/LocalBlockchainArchive2/keys.txt",
 "docConfirmation": true
 }
