@@ -4,10 +4,14 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.*;
 import java.io.*;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.net.URL;
-import java.nio.file.Files;
+import java.net.URLConnection;
 import java.security.*;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
@@ -124,14 +128,51 @@ public class Crypto implements Serializable {
         }
         return Crypto.getStringHash(s);
     }
+    public static InputStream getContent(final String args) throws IOException, NoSuchAlgorithmException,
+            KeyManagementException {
 
-    public static String getHashOfUrls(String[] f, String hostname, String folder) throws NoSuchAlgorithmException, IOException {
+        // Create a trust manager that does not validate certificate chains
+        final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+        } };
+
+        // Install the all-trusting trust manager
+        final SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, trustAllCerts, null);
+        // Create an ssl socket factory with our all-trusting manager
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+        HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+            public boolean verify(String urlHostName, SSLSession session) {
+                return true;
+            }
+        });
+
+        // All set up, we can get a resource through https now:
+        final URL url = new URL(args);
+
+        URLConnection connection = url.openConnection();
+        return (InputStream) connection.getInputStream();
+    }
+
+    public static String getHashOfUrls(String[] f, String hostname, String folder) throws NoSuchAlgorithmException, IOException, KeyManagementException {
         String s = "";
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         for (String file:f) {
             //file.replac
-            URL path = new URL("http://"+hostname+"/archive/"+folder+"/"+file);
-            InputStream in = path.openStream();
+            URL path = new URL("https://"+hostname+"/archive/"+folder+"/"+file);
+
+            InputStream in = getContent("https://"+hostname+"/archive/"+folder+"/"+file);
             BufferedInputStream bis = new BufferedInputStream(in);
             try (DigestInputStream dis = new DigestInputStream(bis, md)) {
                 while (dis.read() != -1) ; //empty loop to clear the data
@@ -153,20 +194,21 @@ public class Crypto implements Serializable {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String TRANSFORMATION = "AES";
 
-    public static void encrypt(String key, File inputFile, File outputFile)
-            throws CryptoException {
-        cryptoFile(Cipher.ENCRYPT_MODE, key, inputFile,outputFile);
+    public static void encrypt(String key, String filename, File inputFile, File outputFile)
+            throws CryptoException, NoSuchAlgorithmException {
+        String salt = getStringHash(filename+key.length());
+        cryptoFile(Cipher.ENCRYPT_MODE, key, inputFile,outputFile,salt);
     }
 
     public static void decrypt(String key, File inputFile, File outputFile)
-            throws CryptoException {
-        cryptoFile(Cipher.DECRYPT_MODE, key, inputFile, outputFile);
+            throws CryptoException, NoSuchAlgorithmException {
+        String salt = getStringHash(inputFile.getName()+key.length());
+        cryptoFile(Cipher.DECRYPT_MODE, key, inputFile, outputFile,salt);
     }
 
 
-    public static void cryptoFile(int cipherMode, String password, File inputFile, File outputFile) throws CryptoException {
+    public static void cryptoFile(int cipherMode, String password, File inputFile, File outputFile,  String salt) throws CryptoException {
         try {
-            String salt = getStringHash(inputFile.getName()+password.length());
             SecretKey key =getKeyFromPassword(password, salt);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(cipherMode, key, generateIv(salt));

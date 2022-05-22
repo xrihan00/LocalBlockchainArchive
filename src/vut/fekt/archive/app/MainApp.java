@@ -282,10 +282,12 @@ public class MainApp extends JFrame {
                                 client.setBlockchain(blockchain);
                                 client.send("confirmed;Looks good!", "server");
                                 client.send("newblock;" + client.serialize(blockchain), "broadcast");
+                                sd.getFrame().setVisible(false);
                                 sd.result = "";
                             }
                             if(sd.result.equals("rejected")){
                                 client.send("rejected;"+sd.docName,"server");
+                                sd.getFrame().setVisible(false);
                                 sd.result = "";
                             }
                             if(nu.ok){

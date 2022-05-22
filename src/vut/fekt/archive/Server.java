@@ -193,6 +193,8 @@ public class Server extends Thread {
                             e.printStackTrace();
                         } catch (ConcurrentModificationException e){
                             System.out.println("Concurrent modification exception, moving on.");
+                        } catch (NoSuchAlgorithmException e) {
+                            e.printStackTrace();
                         }
                 }
             }
@@ -201,7 +203,7 @@ public class Server extends Thread {
     }
 
 
-    private static String createJsonAndRename(File dir) throws IOException, CryptoException {
+    private static String createJsonAndRename(File dir) throws IOException, CryptoException, NoSuchAlgorithmException {
         int randomNum = ThreadLocalRandom.current().nextInt(100000000, 999999999 + 1);
         String id = String.valueOf(randomNum);
         File[] files = dir.listFiles();
@@ -224,7 +226,7 @@ public class Server extends Thread {
             if(encrypt) {
                 String filename =ss[4] + "." + ss[5];
                 filenames.add(filename);
-                Crypto.encrypt(password,f, new File(dir.getAbsolutePath() + "/" + filename));
+                Crypto.encrypt(password,filename,f, new File(dir.getAbsolutePath() + "/" + filename));
                 f.delete();
                 //Files.move(Path.of(f.getAbsolutePath()),Path.of(dir.getAbsolutePath()+"/"+ss[4]+"."+ss[5]));
             }
@@ -323,7 +325,8 @@ class ClientHandler implements Runnable {
                     StringTokenizer st = new StringTokenizer(received, "#");
                     String MsgToSend = st.nextToken();
                     String recipient = st.nextToken();
-
+                    StringTokenizer st2 = new StringTokenizer(received, ";");
+                    String code = st2.nextToken();
 
                     if (MsgToSend.equals("End")) {
                         this.isLogged = false;
@@ -347,7 +350,7 @@ class ClientHandler implements Runnable {
                         MsgToSend = result[0] + ";" + result[1];
                         System.out.println("My response: " + MsgToSend);
                     }
-                    if(isAdmin) {
+                    if(isAdmin||code.equals("blockrequest")) {
                         for (ClientHandler mc : Server.ar) {
                             if (mc.name.equals(recipient) && mc.isLogged == true) {
                                 mc.dos.writeUTF(this.name + ";" + MsgToSend);

@@ -93,7 +93,7 @@ public class Client {
                 confirmation = Boolean.parseBoolean(msg);
                 break;
             case "files":
-                vypis+="Recieved new files.";
+                vypis="Recieved new files.";
                 System.out.println("Recieved new files");
                 String[] desmsg = msg.split(",");
                 newFiles = (File[]) deserialize(desmsg[0]);

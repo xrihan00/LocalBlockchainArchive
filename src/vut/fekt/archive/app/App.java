@@ -28,6 +28,7 @@ public class App {
                         mainApp.docConfirmation = false;
                     }
                     if ((sd.result.equals("confirmed") || sd.result.equals("rejected"))&& !mainApp.client.confirmation) {
+                        mainApp.sd.getFrame().setVisible(false);
                         sd.frame.setVisible(false);
                     }
                     if (mainApp.newUserClicked) {

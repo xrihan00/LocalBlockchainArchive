@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.security.NoSuchAlgorithmException;
 
 public class Decryptor extends JDialog {
     private JPanel contentPane;
@@ -51,7 +52,7 @@ public class Decryptor extends JDialog {
                         Crypto.decrypt(passField.getText(),inputFile,decrypt );
                         status.setText("Soubor dešifrován!");
                         decrypt=null;
-                    } catch (CryptoException ex) {
+                    } catch (CryptoException | NoSuchAlgorithmException ex) {
                         status.setText("Špatné heslo!");
                         decrypt.delete();
                         //ex.printStackTrace();
