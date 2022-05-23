@@ -11,6 +11,7 @@ import java.security.cert.CertificateException;
 import java.util.Objects;
 import java.util.Scanner;
 
+//třída reprezentuje spojení se serverem
 public class Connection{
     private int port = 2021;
     private String receivedData;
@@ -46,11 +47,12 @@ public class Connection{
         read.start();
     }
 
+    //vytvoření SSL socketu
     public Socket getSSLSocket(String ip) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
         Objects.requireNonNull("TLSv1.2", "TLS version is mandatory");
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        InputStream tstore = Connection.class
-                .getResourceAsStream("/keystore.p12");
+        String config = new File(".").getCanonicalPath();
+        InputStream tstore = new FileInputStream(config+"/keystore.p12");
         trustStore.load(tstore, new char[] {'a', 'b', 'c', '1','2', '3'});
         tstore.close();
         TrustManagerFactory tmf = TrustManagerFactory
@@ -58,7 +60,7 @@ public class Connection{
         tmf.init(trustStore);
 
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        InputStream kstore = Server.class
+        InputStream kstore = Connection.class
                 .getResourceAsStream("/" + "keystore.p12");
         keyStore.load(kstore, new char[] {'a', 'b', 'c', '1','2', '3'});
         KeyManagerFactory kmf = KeyManagerFactory
@@ -69,12 +71,12 @@ public class Connection{
                 SecureRandom.getInstanceStrong());
         SocketFactory factory = ctx.getSocketFactory();
 
-         Socket connection = factory.createSocket(ip, port);
-            ((SSLSocket) connection).setEnabledProtocols(new String[] {"TLSv1.2"});
-            SSLParameters sslParams = new SSLParameters();
-            sslParams.setEndpointIdentificationAlgorithm("HTTPS");
-            ((SSLSocket) connection).setSSLParameters(sslParams);
-            return connection;
+        Socket connection = factory.createSocket(ip, port);
+        ((SSLSocket) connection).setEnabledProtocols(new String[] {"TLSv1.2"});
+        SSLParameters sslParams = new SSLParameters();
+        sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+        ((SSLSocket) connection).setSSLParameters(sslParams);
+        return connection;
 
 
     }

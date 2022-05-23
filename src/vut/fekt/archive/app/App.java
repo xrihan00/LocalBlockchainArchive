@@ -2,7 +2,7 @@ package vut.fekt.archive.app;
 
 
 public class App {
-    //hlavní metoda celé  aplikace
+    //hlavní metoda validační aplikace
     public static void main(String[] args) {
 
         ShowDocument sd = new ShowDocument();
@@ -13,7 +13,7 @@ public class App {
         MainApp mainApp = new MainApp(sd,nu);
         mainApp.initMainapp();
         mainApp.frame.setVisible(true); //hlavní okno je po spuštění jediné zviditelněno
-
+        //Thread který kontroluje jednotlivá okna
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {

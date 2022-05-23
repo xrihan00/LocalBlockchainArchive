@@ -19,6 +19,8 @@ import java.util.Base64;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Crypto implements Serializable {
+    //kryptograficke pomocne metody
+
 
     //vygeneruje RSA veřejný/soukromý klíč
     public static KeyPair generateKeyPair() throws Exception {
@@ -90,6 +92,7 @@ public class Crypto implements Serializable {
         return hexString.toString();
     }
 
+    //získá hash zadaného souboru
     public static String getFileHash(String filepath) throws NoSuchAlgorithmException, IOException {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         System.out.println("Hashing "+filepath);
@@ -108,6 +111,7 @@ public class Crypto implements Serializable {
 
     }
 
+    //zhashuje string
     public static String getStringHash(String string) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         System.out.println("Hashing "+string);
@@ -128,10 +132,12 @@ public class Crypto implements Serializable {
         }
         return Crypto.getStringHash(s);
     }
+
+    //získá inputstream ze stránky která je chráněna https - v našem případě archive ke kterému se dostává přes apache
     public static InputStream getContent(final String args) throws IOException, NoSuchAlgorithmException,
             KeyManagementException {
 
-        // Create a trust manager that does not validate certificate chains
+
         final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
             @Override
             public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
@@ -147,10 +153,9 @@ public class Crypto implements Serializable {
             }
         } };
 
-        // Install the all-trusting trust manager
+
         final SSLContext sslContext = SSLContext.getInstance("SSL");
         sslContext.init(null, trustAllCerts, null);
-        // Create an ssl socket factory with our all-trusting manager
         HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
         HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
             public boolean verify(String urlHostName, SSLSession session) {
@@ -158,20 +163,17 @@ public class Crypto implements Serializable {
             }
         });
 
-        // All set up, we can get a resource through https now:
         final URL url = new URL(args);
 
         URLConnection connection = url.openConnection();
         return (InputStream) connection.getInputStream();
     }
 
+    //získá hash seznamu souborů - je použito pro validaci a vytváření bloků
     public static String getHashOfUrls(String[] f, String hostname, String folder) throws NoSuchAlgorithmException, IOException, KeyManagementException {
         String s = "";
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         for (String file:f) {
-            //file.replac
-            URL path = new URL("https://"+hostname+"/archive/"+folder+"/"+file);
-
             InputStream in = getContent("https://"+hostname+"/archive/"+folder+"/"+file);
             BufferedInputStream bis = new BufferedInputStream(in);
             try (DigestInputStream dis = new DigestInputStream(bis, md)) {
@@ -194,23 +196,27 @@ public class Crypto implements Serializable {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String TRANSFORMATION = "AES";
 
+    //zašifruje soubor
     public static void encrypt(String key, String filename, File inputFile, File outputFile)
             throws CryptoException, NoSuchAlgorithmException {
         String salt = getStringHash(filename+key.length());
         cryptoFile(Cipher.ENCRYPT_MODE, key, inputFile,outputFile,salt);
     }
 
+    //dešifruje soubor
     public static void decrypt(String key, File inputFile, File outputFile)
             throws CryptoException, NoSuchAlgorithmException {
         String salt = getStringHash(inputFile.getName()+key.length());
         cryptoFile(Cipher.DECRYPT_MODE, key, inputFile, outputFile,salt);
     }
 
-
+    //obecná metoda která provádí šifrování souborů
     public static void cryptoFile(int cipherMode, String password, File inputFile, File outputFile,  String salt) throws CryptoException {
         try {
+            //z hesla a soli vytvořímě klíč
             SecretKey key =getKeyFromPassword(password, salt);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
+            //inicializace AES - vezmeme klíč a vygenerujeme IV pomocí soli
             cipher.init(cipherMode, key, generateIv(salt));
             FileInputStream inputStream = new FileInputStream(inputFile);
             FileOutputStream outputStream = new FileOutputStream(outputFile);
@@ -237,6 +243,7 @@ public class Crypto implements Serializable {
         }
     }
 
+    //vezme heslo a sůl a pomocí funkce PBKDF2 vytvoří tajný klíč
     public static SecretKey getKeyFromPassword(String password, String salt)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
 
@@ -247,6 +254,7 @@ public class Crypto implements Serializable {
         return secret;
     }
 
+    //vygereuje inicializační vektor
     public static IvParameterSpec generateIv(String salt) throws NoSuchAlgorithmException {
         String s = getStringHash(salt);
         String s1 = s.substring(0,16);
@@ -275,5 +283,4 @@ public class Crypto implements Serializable {
         return o;
     }
 }
-//kryptograficke pomocne metody
 

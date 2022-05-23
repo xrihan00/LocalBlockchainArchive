@@ -23,7 +23,7 @@ public class Blockchain implements Serializable {
     }
 
 
-    //pridání bloku do blockchainu - je mu předána hodnot previoushash
+    //pridání bloku do blockchainu - je mu předána hodnota previoushash
     public void addBlock(Block block){
         block.setPreviousHash(getLastHash());
         blocks.add(block);
@@ -33,7 +33,7 @@ public class Blockchain implements Serializable {
         blocks.add(block);
     }
 
-    //nahodne vygenerovane Id
+    //nahodne vygenerovane Id - používané dříve
     public int randomId(){
         Random rng = new Random();
         return rng.nextInt(10000);

@@ -21,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.json.*;
 import vut.fekt.archive.blockchain.CryptoException;
 
+//hlavní třída aplikace ArchiveApp
 public class Server extends Thread {
     private JPanel panelserver;
     private JLabel label;
@@ -51,6 +52,7 @@ public class Server extends Thread {
         frame.setVisible(true);
         frame.setBounds(100, 100, 300, 100);
 
+        //načteme config, přihlašovací údaje a veřejné klíče
         loadConfig();
         loadSecrets();
         try {
@@ -77,6 +79,7 @@ public class Server extends Thread {
         }
     }
 
+    //načtení konfiguračního souboru
     private static void loadConfig() {
         //File config = new File("config.json");
         InputStream in = null;
@@ -98,6 +101,7 @@ public class Server extends Thread {
         }
     }
 
+    //vytvoření SSL socketu
     private static SSLServerSocket getSslSocket() throws Exception {
             Objects.requireNonNull("TLSv1.2", "TLS version is mandatory");
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -127,6 +131,7 @@ public class Server extends Thread {
             return sslListener;
     }
 
+    //načtení souboru s přihlašovacími údaji
     private static void loadSecrets() throws IOException {
         //String path = System.getProperty("user.dir");
         Path path = Path.of(secretsFile);
@@ -143,6 +148,7 @@ public class Server extends Thread {
         }
     }
 
+    //přidání nového uživatele - uloží do souboru secrets
     public static void addUser(String username, String password) throws IOException, NoSuchAlgorithmException {
         Path path = Path.of(secretsFile);
         String s = username +":"+Crypto.getStringHash(password)+":user;";
@@ -161,6 +167,8 @@ public class Server extends Thread {
         legitKeys = (ArrayList<PublicKey>) Crypto.deserialize(serialized);
     }
 
+    //vlákno které kontroluje složku uploads back endu
+    //pokud se v něm objeví nový dokument, zpracuje ho
     private static void newDocumentThread() throws Exception {
         Thread filethread = new Thread(new Runnable() {
             @Override
@@ -168,6 +176,7 @@ public class Server extends Thread {
                 while (true) {
                         try {
                             Thread.sleep(5000);
+                            //checkujeme jenom pokud je někdo připojený
                             if (checkIfClientsConnectedAndRemove()) {
                                 File uploadDir = new File(rootDir + "uploads");
                                 Charset charset = StandardCharsets.UTF_8;
@@ -176,6 +185,7 @@ public class Server extends Thread {
                                     System.out.println("Can't see the upload folder, something is wrong.");
                                 }
                                 else if (newDocs.length != 0) {
+                                    //zpracování nového dokumentu
                                     System.out.println("Document " + newDocs[0].getName());
                                     File dir = new File(newDocs[0].getAbsolutePath());
                                     if (dir.listFiles().length != 0) {
@@ -203,6 +213,8 @@ public class Server extends Thread {
     }
 
 
+    //metoda přenese soubory do archivu, pokud je zapnuté šifrování tak je zašifruje
+    //dále vytvoří soubor s metadaty a přejmenuje původní soubory na správné názvy
     private static String createJsonAndRename(File dir) throws IOException, CryptoException, NoSuchAlgorithmException {
         int randomNum = ThreadLocalRandom.current().nextInt(100000000, 999999999 + 1);
         String id = String.valueOf(randomNum);
@@ -250,7 +262,7 @@ public class Server extends Thread {
         //json.write(obj.);
     }
 
-
+    //vybere náhodného validátora pošle mu seznam nových souborů
     private static void pickClientAndSend(String files,String docId) {
         Random rng = new Random();
         int random = rng.nextInt(ar.size());
@@ -262,11 +274,13 @@ public class Server extends Thread {
 
     }
 
+    //smaže dokument z archivu - použito pokud jej validátor odmítne
     public static void deleteDoc(String docId) throws IOException {
         String dir = archDir+docId;
         FileUtils.deleteDirectory(new File(dir));
     }
 
+    //zkontroluje jestli je někdo připojený, pokud ano, zkontroluje jestli se neodpojil a když tak smaže ze seznamu
     private static boolean checkIfClientsConnectedAndRemove() {
         if (ar.isEmpty()) return false;
         Iterator<ClientHandler> iter = ar.iterator();
@@ -283,11 +297,13 @@ public class Server extends Thread {
 
 }
 
+//třída která obslhuje clienta
 class ClientHandler implements Runnable {
     final String name;
     final DataInputStream dis;          // vstupní data
     final DataOutputStream dos;         // výstupní data
     Socket socket;
+    //booleany vlastností klienta
     boolean isLogged;
     boolean isAdmin;
     public boolean isAuthorized;
@@ -298,7 +314,6 @@ class ClientHandler implements Runnable {
     HashMap<String, String> users;
 
 
-    // konstruktor pre triedu clientHandler
     public ClientHandler(Socket socket, String name, DataInputStream dis, DataOutputStream dos, HashMap<String, String> admins, HashMap<String, String>  users) throws IOException {
         this.dos = dos;
         this.dis = dis;
@@ -312,22 +327,22 @@ class ClientHandler implements Runnable {
         this.users = users;
     }
 
-    // metoda s cyklom while
     @Override
     public void run() {
         String received;
+        //while cyklus který poslouchá na socketu a zpracovává data
         while (true) {
             try {
                 received = dis.readUTF();
                 System.out.println(this.name + " sent this: " + received);
                 while (received != null) {
-
+                    //něco jsem přijal -zpracování zprávy
                     StringTokenizer st = new StringTokenizer(received, "#");
                     String MsgToSend = st.nextToken();
                     String recipient = st.nextToken();
                     StringTokenizer st2 = new StringTokenizer(received, ";");
                     String code = st2.nextToken();
-
+                    //pokud přišla zpráva End, tak uživatele odhlásím a zavřu socket
                     if (MsgToSend.equals("End")) {
                         this.isLogged = false;
                         this.isAuthorized=false;
@@ -343,13 +358,15 @@ class ClientHandler implements Runnable {
                         System.out.println("Socket closed.");
                         return;
                     }
-
+                    //zpráva je pro mě, zparsuji
                     if (recipient.equals("server")) {
                         String[] result = parse(name, MsgToSend);
                         recipient = name;
                         MsgToSend = result[0] + ";" + result[1];
                         System.out.println("My response: " + MsgToSend);
                     }
+                    //kontroluje zda má uživatel práva admin -tedy jestli může ostatním posílat zprávy
+                    //výjimkou je zpráva blockrequest
                     if(isAdmin||code.equals("blockrequest")) {
                         for (ClientHandler mc : Server.ar) {
                             if (mc.name.equals(recipient) && mc.isLogged == true) {
@@ -374,6 +391,7 @@ class ClientHandler implements Runnable {
         }
     }
 
+    //parsování zprávy
     public String[] parse(String recipient, String message) throws Exception {          // z přijatých dat se opět provede parsování a podle kódu se provádí následné akce
         StringTokenizer st = new StringTokenizer(message, ";");
         String[] result = {null, null};
@@ -381,6 +399,7 @@ class ClientHandler implements Runnable {
         String msg = st.nextToken();
 
         switch (code) {
+            //uživatel se chce autentizovat - použije metodu authenticate()
             case "auth":
                 String[] pair = msg.split(":");
                 result[1] = authenticate(pair[0], pair[1]);
@@ -388,6 +407,7 @@ class ClientHandler implements Runnable {
                     result[0] = "authSucc";
                 } else result[0] = "authFail";
                 break;
+            //starý kod - ted už ho nepouzívám, zůstal pro legacy účely
             case "files":
                 String directory = msg;
                 File dir = new File("C:/Programy/Xampp/htdocs/" + directory);
@@ -400,6 +420,7 @@ class ClientHandler implements Runnable {
                 content = content.replaceAll(directory + ",", "");
                 Files.write(path, content.getBytes(charset));
                 break;
+            //uživatel žádá o klíče, pokud má práva tak mu je vygeneruju  a pšlu
             case "keys":
                 result[0] = "keys";
                 if(isAuthorized&&isAdmin){
@@ -409,6 +430,7 @@ class ClientHandler implements Runnable {
                 }
                 else result[1] = "Not authorized to recieve keys";
                 break;
+            //uživatel potvrdil dokument, pokud je admin tak mu vyhovím
             case "confirmed":
                 if(isAdmin) {
                     isAvailable = true;
@@ -421,6 +443,7 @@ class ClientHandler implements Runnable {
                     result[1] = "Not authorized";
                 }
                 break;
+            //uživatel odmítnul dokument, pokud je admin tak ho smažu
             case "rejected":
                 if(isAdmin) {
                     isAvailable = true;
@@ -434,6 +457,7 @@ class ClientHandler implements Runnable {
                     result[1] = "Not authorized";
                 }
                 break;
+            //žádost o přidání nového uživatele
             case "newuser":
                 if(isAdmin) {
                     String[] newuser = msg.split(":");
@@ -449,6 +473,7 @@ class ClientHandler implements Runnable {
         return result;
     }
 
+    //vygeneruje klíče a pošle je
     private static void genKeysAndSend(ClientHandler cl) throws Exception {
         KeyPair keys = Crypto.generateKeyPair();
         System.out.println("Generated key pair");
@@ -467,6 +492,7 @@ class ClientHandler implements Runnable {
         Thread.sleep(50);
     }
 
+    //autentizace - kontroluje přihlašovací údaje
     private String authenticate(String username, String pass) throws NoSuchAlgorithmException {
         isAuthorized = false;
         System.out.println("Authenticaton - Username: " + username + " , Password: " + pass);

@@ -142,13 +142,14 @@ public class BlockchainValidator {
             } else {
                 detailedLog+=("\nHash je validní.");
             }
-            //ověření validity podpisu
+            //ověření validity veřejného klíče
             boolean validKey = validPublicKeys.contains(block.getPubKey());
             if (!validKey) {
                 detailedLog += "\nVeřejný klíč:  " + block.getPubKey() + "\nVEŘEJNÝ KLĆ NENÍ VALIDNÍ!";
                 integrity = false;
                 result = false;
             }
+            //ověření samotného podpisu
             boolean signature = Crypto.verify(filehash.getBytes(StandardCharsets.UTF_8),block.getSignature(),block.getPubKey());
             if (!signature) {
                 detailedLog += "\nPodpis:  " + block.getSignature() + "\nPODPIS NENÍ VALIDNÍ - INTEGRITA PORUŠENA!";

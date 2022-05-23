@@ -24,9 +24,8 @@ public class NewUser extends JFrame{
     boolean ok = false;
     boolean cancel = false;
 
-    //okno vytváření nového dokumentu
+    //okno vytváření nového uživatele
     public NewUser() {
-        //výběr souboru obsahu
 
         //ok tlačítko změní boolean ok na true, což zachytí thread ve třídě App
         OKButton.addActionListener(new ActionListener() {

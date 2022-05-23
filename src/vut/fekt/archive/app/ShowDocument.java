@@ -1,6 +1,5 @@
 package vut.fekt.archive.app;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -8,7 +7,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
+//okno potvrzování souborů
 public class ShowDocument extends JFrame{
     private JTextField nazevField;
     private JTextField autorField;
@@ -55,12 +56,13 @@ public class ShowDocument extends JFrame{
         frame.setSize(500,300);
     }
 
+    //rozparsování souboru metadata.json pro daný dokument
     public void parseDoc(String url, String doc) throws IOException {
         String metaPath = "http://"+url+"/archive/"+doc+"/metadata.json";
         URL path = new URL(metaPath);
         InputStream in = path.openStream();
         BufferedInputStream bis = new BufferedInputStream(in);
-        String jsonFile = IOUtils.toString(bis, "UTF-8");
+        String jsonFile = new String(bis.readAllBytes(), StandardCharsets.UTF_8);
         JSONObject json = new JSONObject(jsonFile);
         nazevField.setText(doc);
         docName = doc;

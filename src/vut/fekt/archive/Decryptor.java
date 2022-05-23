@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 
+//aplikace Decrpytor
 public class Decryptor extends JDialog {
     private JPanel contentPane;
     private JButton loadFileButton;
@@ -21,10 +22,11 @@ public class Decryptor extends JDialog {
     private File inputFile;
     private String password;
 
+
     public Decryptor() {
         setContentPane(contentPane);
         setModal(true);
-
+        //tlačítko načíst soubor
         loadFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -39,6 +41,7 @@ public class Decryptor extends JDialog {
                 }
             }
         });
+        //tlačítko dešifrovat
         decryptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

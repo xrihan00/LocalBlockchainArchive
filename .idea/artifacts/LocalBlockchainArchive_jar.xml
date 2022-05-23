@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="LocalBlockchainArchive:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/LocalBlockchainArchive_jar</output-path>
-    <root id="archive" name="LocalBlockchainArchive.jar">
-      <element id="module-output" name="LocalBlockchainArchive" />
-    </root>
-  </artifact>
-</component>

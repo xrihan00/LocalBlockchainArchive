@@ -18,24 +18,14 @@ import java.util.*;
 
 //hlavní okno aplikace
 public class MainApp extends JFrame {
+    //GUI prvky
     public JLabel FileLabel;
     public JLabel archiveLabel;
-    public Blockchain blockchain = new Blockchain();
     public MainApp frame;
-
-    public ShowDocument sd;
-    public boolean docConfirmation = false;
-
-    public NewUser nu;
-    public boolean newUserClicked = false;
-    public boolean nuDone = false;
-
-    public Client client;
     private JPanel panel1;
     private JTextPane textPane1;
     private JButton printBlockchainButton;
     private JButton validateBlockchainButton;
-
     private JTextPane vypis;
     private JTextField urlField;
     private JTextField usernameField;
@@ -43,11 +33,24 @@ public class MainApp extends JFrame {
     private JButton connectButton;
     private JButton authButton;
     private JButton newUserButton;
-
+    
+    //blockchain a kliče
+    public Blockchain blockchain = new Blockchain();
     private KeyPair keyPair;
     private ArrayList<PublicKey> publicKeys = new ArrayList<>();
-    private boolean isAuthorized = false;
+
+    //okno na potvrzení dokumentu
+    public ShowDocument sd;
+    public boolean docConfirmation = false;
+
+    //okno n azob
+    public NewUser nu;
+    public boolean newUserClicked = false;
+    public boolean nuDone = false;
+
+    public Client client;
     private String url=null;
+
 
     public MainApp(ShowDocument showdoc, NewUser newUser) {
         this.sd = showdoc;
@@ -88,6 +91,7 @@ public class MainApp extends JFrame {
 
             }
         });
+        //tlačítko připojit
         connectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -129,6 +133,7 @@ public class MainApp extends JFrame {
                 }
             }
         });
+        //tlaítko přihlásit
         authButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -149,36 +154,13 @@ public class MainApp extends JFrame {
                 }
             }
         });
+        //tlačítko Nový uživatel
         newUserButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 newUserClicked = true;
             }
         });
-        /*saveBlockchainButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    blockchain =Crypto.loadBlockchain(new File("C:\\Programy\\Xampp\\htdocs\\blockchain.txt"));
-                    client.blockchain = blockchain;
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                } catch (ClassNotFoundException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });*/
-        /*       requestBlockchainButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    getBlockchainsAndSetMostCommon();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });*/
-
     }
 
     //inicializace framu
@@ -233,6 +215,7 @@ public class MainApp extends JFrame {
         vypis.setText(vypis.getText()+"\n"+s);
     }
 
+    //hlavní vlákno které kontroluje tříd client na změny - reaguje tedy na příchozí zprávy, které mění stav aplikace
     public void clientThread() {
         Thread clientThread = new Thread(new Runnable() {
             @Override
@@ -242,11 +225,13 @@ public class MainApp extends JFrame {
                     try {
                         Thread.sleep(100);
                         if (client != null) {
-                            isAuthorized = client.isAuthorized;
+                            boolean isAuthorized = client.isAuthorized;
+                            //výpis do logu komunikace
                             if (client.newVypis) {
                                 setVypis(client.vypis);
                                 client.newVypis = false;
                             }
+                            //přidávání nových souborů
                             if(client.newFiles!=null){
                                 if(client.confirmation==false){
                                     sd.result ="confirmed";
@@ -261,21 +246,25 @@ public class MainApp extends JFrame {
                                 }
                                 setVypis("Nové archiválie přidány");
                             }
+                            //dorazil nový blok
                             if(client.newBlock){
                                 client.newBlock=false;
                                 validateNewBlock(client.newBlockchain);
                                 client.setBlockchain(blockchain);
                             }
+                            //dorazili klíče
                             if(client.newKeys){
                                 publicKeys = client.keys;
                                 client.newKeys = false;
                                 setVypis("Seznam legitimních klíčů přidán");
                             }
+                            //dorazili par klíčů
                             if(client.newKeyPair){
                                 keyPair = client.keyPair;
                                 client.newKeyPair = false;
                                 setVypis("Klíče obdrženy");
                             }
+                            //kontroluje zda uživatel odkliknul potvrzení dokumentu
                             if(sd.result.equals("confirmed")){
                                 getBlockchainsAndSetMostCommon();
                                 blockchain.addBlock(createBlock(files,client.newDoc));
@@ -285,6 +274,7 @@ public class MainApp extends JFrame {
                                 sd.getFrame().setVisible(false);
                                 sd.result = "";
                             }
+                            //kontroluje zda uživatel odkliknul potvrzení dokumentu
                             if(sd.result.equals("rejected")){
                                 client.send("rejected;"+sd.docName,"server");
                                 sd.getFrame().setVisible(false);
@@ -313,7 +303,7 @@ public class MainApp extends JFrame {
     }
 
 
-
+    //metoda vytvoří nový blok blockchainu na základě názvu souborů a názvu dokumentu
     public Block createBlock(File[] files, String docId) throws Exception {
 
         String meta = null;
@@ -334,6 +324,7 @@ public class MainApp extends JFrame {
         return block;
     }
 
+    //validuje nový blok
     public void validateNewBlock(Blockchain newBlock) throws Exception {
         BlockchainValidator bv = new BlockchainValidator(blockchain,url, publicKeys);
         if(bv.containsBlock(newBlock.getBlocks().getLast())){
@@ -348,6 +339,7 @@ public class MainApp extends JFrame {
         //vypis.setText(bv.getDetailedLog());
     }
 
+    //požádá o blockchainy ostatních a nastaví si ten nejčastější
     public void getBlockchainsAndSetMostCommon() throws Exception {
         client.send("blockrequest;"+"I need blocks","broadcast");
         setVypis("Žádost o blockchainy odeslána");
@@ -384,6 +376,8 @@ public class MainApp extends JFrame {
         client.blockchain = blockchain;
         client.chains.clear();
     }
+
+    //uloží blockchain do souboru
     public void saveArchiveBlockchain() throws IOException {
         FileOutputStream fos = new FileOutputStream(System.getProperty("user.dir")+"/blockchain.txt");
         fos.write(blockchain.toString().getBytes(StandardCharsets.UTF_8));

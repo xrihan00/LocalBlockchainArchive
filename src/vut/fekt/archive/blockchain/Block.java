@@ -42,7 +42,7 @@ public class Block implements Serializable {
         this.filehash = filehash;
     }
 
-    // getter pre predošlý hash
+
     public String getPreviousHash() {
         return previousHash;
     }
@@ -50,12 +50,12 @@ public class Block implements Serializable {
         this.previousHash = previousHash;
     }
 
-       // getter ID hlasu
+
     public int getBlockId() {
         return blockId;
     }
 
-    // getter časového razítka
+
     public String getTimeStamp() {
         return timeStamp;
     }

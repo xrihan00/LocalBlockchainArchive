@@ -1,6 +1,6 @@
 package vut.fekt.archive;
 
-
+import org.apache.commons.io.FileUtils;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.URL;
@@ -11,12 +11,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 
-import edu.uci.ics.crawler4j.crawler.CrawlConfig;
-import edu.uci.ics.crawler4j.crawler.CrawlController;
-import edu.uci.ics.crawler4j.fetcher.PageFetcher;
-import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
-import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import vut.fekt.archive.blockchain.Blockchain;
 import vut.fekt.archive.blockchain.Crypto;

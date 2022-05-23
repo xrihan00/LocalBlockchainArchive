@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: vut.fekt.archive.app.App
+Main-Class: vut.fekt.archive.Decryptor
 

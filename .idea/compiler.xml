@@ -6,9 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="Decryptor" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Decryptor" target="15" />
       <module name="LocalBlockchainArchive" target="15" />
     </bytecodeTargetLevel>
   </component>
